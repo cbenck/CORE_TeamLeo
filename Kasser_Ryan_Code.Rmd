@@ -1,0 +1,141 @@
+---
+title: "Kasser_Ryan_1993"
+author: "Leopold Roth"
+date: "2023-11-24"
+output: html_document
+---
+
+# Packages
+```{r}
+library(dplyr)
+library(readr)
+library(readxl)
+```
+
+# Load Data
+```{r}
+
+#N initial:
+```
+
+# Check data
+## exclude incomplete cases
+```{r}
+
+#N complete:
+```
+
+## exclude by conduction time (3SD faster than average)
+```{r}
+
+#N after time exclusion:
+```
+
+## exclude by missed attention checks (3 attention checks)
+```{r}
+
+#N after attention exclusion (final N):
+```
+
+# Clean data
+## exclude columns of attention checks
+```{r}
+
+```
+
+## exclude non-needed columns
+```{r}
+
+```
+
+## rename variables
+```{r}
+
+```
+
+#Descriptives
+## compute reliabilities
+```{r}
+
+```
+
+## demographics
+```{r}
+#describe age:
+
+#describe best identified gender:
+
+```
+
+## compute means
+```{r}
+
+```
+
+## describe distribution of means
+```{r}
+
+```
+
+## intercorrelations of means
+```{r}
+
+```
+
+# Analysis Kasser & Ryan (1993)
+## Preliminary analysis
+```{r}
+#MANOVA: all aspiration importances by sex (4)
+#ChatGPT example:
+#manova_result <- manova(cbind(var1, var2, var3, var4) ~ sex, data = data)
+#summary(manova_result)
+#MANOVA: all aspiration chances by sex (4)
+#follow-up t-tests by gender
+#exclude non-binary??
+
+#interaction: DV (self-act. or vitality) ~ gender + overall_asp (importance or chances) + aspiration_domain*gender
+#16 interactions:
+#self_act_mean ~ overall_asp_importance + importance_acceptance*gender (example)
+
+#intercorrelate all importance (put in one)
+#intercorrelate all chances
+```
+
+## Primary analysis
+### hierarchical regressions
+```{r}
+#m1<-vitality_mean ~ overall_asp_importance
+#m2<-vitality_mean ~ overall_asp_importance + importance_acceptance + importance_affiliation + importance_community + #importance_finance (see betas Table 2)
+
+#m1<-self_act_mean ~ overall_asp_importance
+#m2<-self_act_mean ~ overall_asp_importance + importance_acceptance + importance_affiliation + importance_community + #importance_finance
+
+#zero-order correlations importances with outcomes (vitality or self_actualization)
+```
+
+### group comparisons (assessment of relative centrality)
+```{r}
+#z-standardize raw scores of all eight means (importances and chances)
+#form dichotomized variables: e.g. 1 if financial importance is higher than community, otherwise 0
+## FSI vs SAI
+## FSI vs AFI
+## FSI vs CFI
+## FSC vs SAC
+## FSC vs AFC
+## FSC vs CFC
+```
+
+### guiding principles
+```{r}
+#average position across three sets for each guiding principle
+#assess five guiding principles but only consider three
+#correlate with measures (e.g. self_actualization)
+
+#centrality analysis (through z-standardization again)
+#t-tests
+```
+
+
+
+
+
