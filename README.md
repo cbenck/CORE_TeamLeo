@@ -1,4 +1,4 @@
-# CORE_TeamLeo
+# This is the GitHub Repository of the Replication Project on Kasser & Ryan (1993)
 All files for CORE_TeamLeo
 
 Hier können wir den Code für unser Repl. Projekt hinterlegen.
