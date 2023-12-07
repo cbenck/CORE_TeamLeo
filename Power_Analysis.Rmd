@@ -1,0 +1,68 @@
+---
+title: "Power Analysis"
+author: "Dominik Meindl"
+date: "2023-11-27"
+output: html_document
+---
+
+# Packages
+```{r}
+#Packages----
+library(pwr)
+library(esc)
+library(readr)
+```
+
+#Load Data
+This is raw data extracted from the publication. Such as Means, standard deviations, t values and significance (.05 or .10) as well as which study this data has been extracted from.
+
+df = all values concerning t tests
+df2 = all values concerning correlations
+
+```{r}
+#load data----
+df <- read_csv2("./data/ttests_raw.csv")
+df2 <- read_csv2("./data/correlations_raw.csv")
+```
+
+#Power Transformations - Cohens D Values of T-Tests
+Calculate Cohens d for all t-tests using the esc package.
+Afterwards we will add the variable descriptions as well as the Study ID to the dataframe. 
+
+```{r}
+#cohens d calc. for t tests-----
+cohens_d <- esc::esc_mean_sd( grp1n=df$n, grp1m=df$mx, grp1sd = df$sdx, grp2n = df$n, grp2m = df$my, grp2sd = df$sdy, es.type="d")
+cohens_d <- as.data.frame(cohens_d)
+
+cohens_d$variable <- df$variable
+cohens_d$study <- df$study
+
+cohens_d_r <- esc::cohens_d(df2$correlation) #as there is no SD given for the variables (check with LEO to see if im not misinterpreting something here)
+cohens_d_r <- as.data.frame(cohens_d_r)
+cohens_d_r$variable <- df2$variable
+cohens_d_r$study <- df2$study
+
+#write.csv2(cohens_d, "./data/cohens_d_ttests.csv") 
+```
+
+## Power Tests for t-tests and correlations.
+Power calculations for the study have been conducted by adjusting multiple criteria.
+
+An effect size of 0.3 has been chosen as this was the smallest (as significant) reported effect. 
+Alpha has been Bonffroni corrected, to be 0.0009090909 (0.05/55, 55 as the amount of seperate t tests conducted).
+We also adjusted the power level to 0.99. #So argumentieren oder anders?
+
+For the correlations we used r=.21 as the smallest effect size of interest. 
+
+```{r}
+#PWR Calc for n ----
+pwr.t.test(d=0.3, sig.level = 0.0009090909, power=0.99, type="two.sample", )
+
+pwr.r.test(r=0.21, power=0.99, alternative = "two.sided")
+```
+
+For the t-tests we found a sample size of n≈711 per group. Therefore we need a sample of n=1422 for the study to be sufficiently powered.
+
+For the correlations we found a sample size needed of n≈407 participants per group. We therefore need a sample of n=814 for it to be suffiziently powered.
+
+We decided for the sample size of n=1422 as this is those are the more important measures, going with 1422 also allows us to have both measures sufficiently powered for later analysis.
