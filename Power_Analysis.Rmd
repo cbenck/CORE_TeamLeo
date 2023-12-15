@@ -45,45 +45,40 @@ df <- read_csv2("./data/ttests_raw.csv")
 df2 <- read_csv2("./data/correlations_raw.csv")
 ```
 
-#Power Transformations - Cohens D Values of T-Tests
-Calculate Cohens d for all t-tests using the esc package.
-Afterwards we will add the variable descriptions as well as the Study ID to the dataframe. 
+## Power Transformations - Cohens D Values of T-Tests
+Calculate Cohens d for all t-tests using a custom function.
+We will then remerge this date with the original dataframe to get one file containing all information. 
 This is the same code as used in Power_Analysis.rmd.
 
-Due to an error introduced by R 4.3.2 we had to change out approach, we now have to use a for loop to extract the data from the esc function.
+Due to an error introduced by R 4.3.2 we had to change our approach, we now have to use custom code to extract the same data as the esc::esc_mean_sd function.
 
 ```{r}
-#cohens d calc. for t tests-----
-for(i in 1:nrow(df)){
-  x <-esc::esc_mean_sd( grp1n=df$n[i], grp1m=df$mx[i], grp1sd = df$sdx[i], 
-                    grp2n = df$n[i], grp2m = df$my[i], grp2sd = df$sdy[i],
-                    es.type="d")
-  if(i == 1) {
-    cohens_d <- x
-  } else {
-    cohens_d <- rbind(cohens_d, x) # Add new data to dataframe
-  }
+# custom Function to calculate Cohen's d and its statistics
+cohen_d_with_stats <- function(mx, my, sdx, sdy, n) {
+  pooled_sd <- sqrt(((n - 1) * sdx^2 + (n - 1) * sdy^2) / (n + n - 2))
+  d <- (mx - my) / pooled_sd
+  var_d <- (n + n) / (n * n) + (d^2 / (2 * (n + n - 2)))
+  se_d <- sqrt(var_d)
+  ci_95_low <- d - 1.96 * se_d
+  ci_95_high <- d + 1.96 * se_d
+  return(c(d, var_d, se_d, ci_95_low, ci_95_high))
 }
-cohens_d <- as.data.frame(cohens_d)
-```
 
-This approach gives new variable names which arent identical to the previous ones so we change those.
-We also drop two collumns as these only contain an empty collumn, and a collumn describing that we used SD and M per group for our D calculation.
+# Apply the function to each row
+results <- apply(df, 1, function(x) cohen_d_with_stats(as.numeric(x['mx']), 
+                                                       as.numeric(x['my']), 
+                                                       as.numeric(x['sdx']), 
+                                                       as.numeric(x['sdy']), 
+                                                       as.numeric(x['n'])))
 
-```{r}
-new_names <- c("es","se","var",	"ci.lo",	"ci.hi","weight",	"sample.size","measure")
-names(cohens_d) <- new_names
+# Converting results to a dataframe
+results_df <- as.data.frame(t(results))
+names(results_df) <- c("es", "var", "se", "ci.lo", "ci.hi")
 
-cohens_d <- cohens_d%>%select(c(1:7)) #dropping last two collumns as these are irrelevant
-```
+# Merging results with the original dataframe
+cohens_d <- cbind(df, results_df)
 
-We now add the beforementioned variable names and study id back into the dataframe and save it.
-This version is now identical to the old one, with the sole exception of it not containing a collumn "method" which only contains the value "d".
-
-```{r}
-cohens_d$variable <- df$variable
-cohens_d$study <- df$study
-#write_csv2(cohens_d, "./data/cohens_d_ttests.csv")
+#write.csv2(cohens_d, "./data/cohens_d_ttests.csv")
 ```
 
 #Power Transformations - Cohens D Values of correlations
