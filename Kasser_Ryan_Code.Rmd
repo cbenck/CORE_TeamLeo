@@ -14,6 +14,8 @@ library(haven)
 library(misty)
 library(tidyr)
 library(ggplot2)
+library(sjPlot)
+library(broom)
 ```
 
 # Load Data
@@ -228,7 +230,7 @@ df <- df %>% mutate(mean_gpr_hedonism =
 df <- df %>% mutate(mean_self_actualization = 
                       rowMeans(select(., starts_with("SA_")), na.rm = TRUE))
 #vitality
-df <- df %>% mutate(mean_self_actualization = 
+df <- df %>% mutate(mean_vitality = 
                       rowMeans(select(., starts_with("VI_")), na.rm = TRUE))
 #control orientation
 df <- df %>% mutate(mean_control_orientation = 
@@ -269,14 +271,34 @@ df_means %>%
 
 # Analysis Kasser & Ryan (1993)
 ## Preliminary analysis
+### MANOVA by gender with follow up t-tests
 ```{r}
-#MANOVA: all aspiration importances by sex (4)
-#ChatGPT example:
-#manova_result <- manova(cbind(var1, var2, var3, var4) ~ sex, data = data)
-#summary(manova_result)
-#MANOVA: all aspiration chances by sex (4)
-#follow-up t-tests by gender
-#exclude non-binary??
+#exclude individuals which didn't indicate to identify as female/male
+df_manova <- subset(df, gender < 3) 
+
+#manova importances
+manova_importances <- manova(cbind(mean_asp_asi,mean_asp_afi,mean_asp_cfi,mean_asp_fsi)
+                             ~ gender, data = df_manova)
+summary(manova_importances)
+report::report(manova_importances)
+
+#follow up t-tests
+report::report(t.test(mean_asp_asi ~gender, data = df_manova))
+report::report(t.test(mean_asp_afi ~gender, data = df_manova))
+report::report(t.test(mean_asp_cfi ~gender, data = df_manova))
+report::report(t.test(mean_asp_fsi ~gender, data = df_manova))
+
+#manova chances
+manova_chances <- manova(cbind(mean_asp_asc,mean_asp_afc,mean_asp_cfc,mean_asp_fsc)
+                             ~ gender, data = df_manova)
+summary(manova_chances)
+report::report(manova_chances)
+
+#follow up t-tests
+report::report(t.test(mean_asp_asc ~gender, data = df_manova))
+report::report(t.test(mean_asp_afc ~gender, data = df_manova))
+report::report(t.test(mean_asp_cfc ~gender, data = df_manova))
+report::report(t.test(mean_asp_fsc ~gender, data = df_manova))
 
 #interaction: DV (self-act. or vitality) ~ gender + overall_asp (importance or chances) + aspiration_domain*gender
 #16 interactions:
@@ -285,6 +307,71 @@ df_means %>%
 #intercorrelate all importance (put in one)
 #intercorrelate all chances
 ```
+
+### outcome by gender and aspiration interactions
+```{r}
+extract_full_name <- function(string) {
+    parts <- unlist(strsplit(string, "_"))
+    # Assuming the dependent variable name is the first three parts of the split
+    full_name <- paste(parts[1:3], collapse = "_")
+    return(full_name)
+}
+
+run_models <- function(dependent_var, data) {
+  models <- list()
+  interactions_i <- c("mean_asp_asi", "mean_asp_afi", "mean_asp_cfi", "mean_asp_fsi")
+  interactions_c <- c("mean_asp_asc", "mean_asp_afc", "mean_asp_cfc", "mean_asp_fsc")
+  
+  # Pair overall_importance with interactions ending in 'i'
+  for (inter in interactions_i) {
+    model_formula <- as.formula(paste(dependent_var, "~ mean_asp_overall_importance +", inter, "*gender"))
+    model_name <- paste(dependent_var, "mean_asp_overall_importance", inter, sep="_")
+    models[[model_name]] <- lm(model_formula, data = data)
+  }
+
+  # Pair overall_chances with interactions ending in 'c'
+  for (inter in interactions_c) {
+    model_formula <- as.formula(paste(dependent_var, "~ mean_asp_overall_chances +", inter, "*gender"))
+    model_name <- paste(dependent_var, "mean_asp_overall_chances", inter, sep="_")
+    models[[model_name]] <- lm(model_formula, data = data)
+  }
+  
+  return(models)
+}
+
+dependent_vars <- c("mean_self_actualization","mean_vitality","mean_control_orientation", "mean_depressive_symptoms", "mean_trait_anxiety")
+all_models <- list()
+
+for (var in dependent_vars) {
+  all_models[[var]] <- run_models(var, df)
+}
+
+model_summaries <- list()
+
+for (var in names(all_models)) {
+  model_summaries[[var]] <- lapply(all_models[[var]], broom::tidy)
+}
+
+results_df <- data.frame()
+
+for (var in names(all_models)) {
+    for (model_name in names(all_models[[var]])) {
+        model_summary <- broom::tidy(all_models[[var]][[model_name]])
+        model_summary$model <- model_name  # Add the model name directly here
+        results_df <- rbind(results_df, model_summary)
+    }
+}
+
+filtered_df <- results_df[grepl(":gender", results_df$term), ]
+
+filtered_df$model <- sapply(filtered_df$model, extract_full_name)
+
+df_results_gender_interactions <- filtered_df
+
+#find significant interactions
+df_results_gender_interactions <- subset(df_results_gender_interactions, p.value < .05)
+```
+
 
 ## Primary analysis
 ### hierarchical regressions
