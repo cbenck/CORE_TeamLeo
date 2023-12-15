@@ -69,12 +69,53 @@ df <- df %>%
     . == 4 ~ 1,
     TRUE ~ . # keeps original value if none of the above conditions are met
   )))
+
+#vitality
+df <- df %>%
+  mutate(across(grep("^VI_.*_R$", names(df), value = TRUE), ~case_when(
+    . == 1 ~ 7,
+    . == 2 ~ 6,
+    . == 3 ~ 5,
+    . == 4 ~ 4,
+    . == 5 ~ 3,
+    . == 6 ~ 2,
+    . == 7 ~ 1,
+    TRUE ~ . # keeps original value if none of the above conditions are met
+  )))
+
+#depressive symptoms
+df <- df %>%
+  mutate(across(grep("CES_.*_R$", names(df), value = TRUE), ~case_when(
+    . == 0 ~ 3,
+    . == 1 ~ 2,
+    . == 2 ~ 1,
+    . == 3 ~ 0,
+    TRUE ~ . # keeps original value if none of the above conditions are met
+  )))
+
+#trait anxiety
+df <- df %>%
+  mutate(across(grep("AN_.*_R$", names(df), value = TRUE), ~case_when(
+    . == 4 ~ 1,
+    . == 3 ~ 2,
+    . == 2 ~ 3,
+    . == 1 ~ 4,
+    TRUE ~ . # keeps original value if none of the above conditions are met
+  )))
 ```
 
 
 ## rename variables (remove _R from recode variables)
 ```{r}
+#self-actualization
 names(df) <- ifelse(grepl("^SA_", names(df)), gsub("_R$", "", names(df)), names(df))
+#vitality
+names(df) <- ifelse(grepl("^VI_", names(df)), gsub("_R$", "", names(df)), names(df))
+#depressive symptoms
+names(df) <- ifelse(grepl("^CES_", names(df)), gsub("_R$", "", names(df)), names(df))
+#trait anxiety
+names(df) <- ifelse(grepl("^AN_", names(df)), gsub("_R$", "", names(df)), names(df))
+
 
 ```
 
@@ -104,6 +145,19 @@ psych::alpha(df%>%select(grep("^GPR_.*_3$", names(df), value = TRUE)))[[1]]
 psych::alpha(df%>%select(grep("^GPR_.*_4$", names(df), value = TRUE)))[[1]]
 ##hedonism
 psych::alpha(df%>%select(grep("^GPR_.*_5$", names(df), value = TRUE)))[[1]]
+
+#self-actualization
+psych::alpha(df%>% select(starts_with("SA_")))[[1]]
+#vitality
+psych::alpha(df%>% select(starts_with("VI_")))[[1]]
+#control orientation (only care about control-subscale)
+psych::alpha(df%>%select(grep("^CO_.*_C$", names(df), value = TRUE)))[[1]]
+#depressive symptoms
+psych::alpha(df%>% select(starts_with("CES_")))[[1]]
+#trait anxiety
+psych::alpha(df%>% select(starts_with("AN_")))[[1]]
+
+
 
 
 ```
