@@ -14,8 +14,8 @@ library(readxl) # 1.4.2
 library(haven) # 2.5.2
 library(misty) # 0.5.4
 library(tidyr) # 1.3.0
-library(ggplot2) # 3.4.2
-library(sjPlot) # 2.8.15
+library(ggplot2) # 3.4.4
+library(sjPlot) # 2.8.14
 library(broom) # 1.0.5
 ```
 
@@ -43,11 +43,11 @@ df<-subset(df,df$Duration__in_seconds_>=cut_duration) #filter out cases with sho
 #N after time exclusion:
 ```
 
-## exclude by missed attention checks (3 attention checks)
+## exclude by missed attention checks (3 attention checks) (deactivated in simulation)
 ```{r}
-df<-subset(df, AT_1 == 5)
-df<-subset(df, AT_2 == 1)
-df<-subset(df, AT_3 == 3)
+#df<-subset(df, AT_1 == 5)
+#df<-subset(df, AT_2 == 1)
+#df<-subset(df, AT_3 == 3)
 
 #N after attention exclusion (final N):
 ```
@@ -178,7 +178,7 @@ table(df$gender) #1 = male, 2 = female, 3 = other, 4 = rather not disclose
 ```{r}
 ###independent variables
 #aspiration index: importances
-df <- df %>% mutate(mean_asp_asi = rowMeans(select(., starts_with("ASP_SAI")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_sai = rowMeans(select(., starts_with("ASP_SAI")), na.rm = TRUE))
 df <- df %>% mutate(mean_asp_afi = rowMeans(select(., starts_with("ASP_AFI")), na.rm = TRUE))
 df <- df %>% mutate(mean_asp_cfi = rowMeans(select(., starts_with("ASP_CFI")), na.rm = TRUE))
 df <- df %>% mutate(mean_asp_fsi = rowMeans(select(., starts_with("ASP_FSI")), na.rm = TRUE))
@@ -191,7 +191,7 @@ df <- df %>%
                                                          starts_with("ASP_FSI")), 
                                                         na.rm = TRUE))
 #aspiration index: chances
-df <- df %>% mutate(mean_asp_asc = rowMeans(select(., starts_with("ASP_SAC")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_sac = rowMeans(select(., starts_with("ASP_SAC")), na.rm = TRUE))
 df <- df %>% mutate(mean_asp_afc = rowMeans(select(., starts_with("ASP_AFC")), na.rm = TRUE))
 df <- df %>% mutate(mean_asp_cfc = rowMeans(select(., starts_with("ASP_CFC")), na.rm = TRUE))
 df <- df %>% mutate(mean_asp_fsc = rowMeans(select(., starts_with("ASP_FSC")), na.rm = TRUE))
@@ -278,32 +278,28 @@ df_means %>%
 df_manova <- subset(df, gender < 3) 
 
 #manova importances
-manova_importances <- manova(cbind(mean_asp_asi,mean_asp_afi,mean_asp_cfi,mean_asp_fsi)
+manova_importances <- manova(cbind(mean_asp_sai,mean_asp_afi,mean_asp_cfi,mean_asp_fsi)
                              ~ gender, data = df_manova)
 summary(manova_importances)
 report::report(manova_importances)
 
 #follow up t-tests
-report::report(t.test(mean_asp_asi ~gender, data = df_manova))
+report::report(t.test(mean_asp_sai ~gender, data = df_manova))
 report::report(t.test(mean_asp_afi ~gender, data = df_manova))
 report::report(t.test(mean_asp_cfi ~gender, data = df_manova))
 report::report(t.test(mean_asp_fsi ~gender, data = df_manova))
 
 #manova chances
-manova_chances <- manova(cbind(mean_asp_asc,mean_asp_afc,mean_asp_cfc,mean_asp_fsc)
+manova_chances <- manova(cbind(mean_asp_sac,mean_asp_afc,mean_asp_cfc,mean_asp_fsc)
                              ~ gender, data = df_manova)
 summary(manova_chances)
 report::report(manova_chances)
 
 #follow up t-tests
-report::report(t.test(mean_asp_asc ~gender, data = df_manova))
+report::report(t.test(mean_asp_sac ~gender, data = df_manova))
 report::report(t.test(mean_asp_afc ~gender, data = df_manova))
 report::report(t.test(mean_asp_cfc ~gender, data = df_manova))
 report::report(t.test(mean_asp_fsc ~gender, data = df_manova))
-
-#interaction: DV (self-act. or vitality) ~ gender + overall_asp (importance or chances) + aspiration_domain*gender
-#16 interactions:
-#self_act_mean ~ overall_asp_importance + importance_acceptance*gender (example)
 
 #intercorrelate all importance (put in one)
 #intercorrelate all chances
@@ -320,8 +316,8 @@ extract_full_name <- function(string) {
 
 run_models <- function(dependent_var, data) {
   models <- list()
-  interactions_i <- c("mean_asp_asi", "mean_asp_afi", "mean_asp_cfi", "mean_asp_fsi")
-  interactions_c <- c("mean_asp_asc", "mean_asp_afc", "mean_asp_cfc", "mean_asp_fsc")
+  interactions_i <- c("mean_asp_sai", "mean_asp_afi", "mean_asp_cfi", "mean_asp_fsi")
+  interactions_c <- c("mean_asp_sac", "mean_asp_afc", "mean_asp_cfc", "mean_asp_fsc")
   
   # Pair overall_importance with interactions ending in 'i'
   for (inter in interactions_i) {
@@ -373,29 +369,231 @@ df_results_gender_interactions <- filtered_df
 df_results_gender_interactions <- subset(df_results_gender_interactions, p.value < .05)
 ```
 
+### intercorrelations importances and chances
+```{r}
+#importances
+df %>%
+  select(c(mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi)) %>%
+  correlation::correlation()
+
+#chances
+df %>%
+  select(c(mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc)) %>%
+  correlation::correlation()
+```
 
 ## Primary analysis
-### hierarchical regressions
+### hierarchical regressions and correlations
 ```{r}
-#m1<-vitality_mean ~ overall_asp_importance
-#m2<-vitality_mean ~ overall_asp_importance + importance_acceptance + importance_affiliation + importance_community + #importance_finance (see betas Table 2)
+#self-actualization - importance
+m1 <- lm(mean_self_actualization ~ mean_asp_overall_importance, data = df)
+m2 <- lm(mean_self_actualization ~ mean_asp_overall_importance+
+            mean_asp_sai+
+            mean_asp_afi+
+            mean_asp_fsi+
+            mean_asp_cfi, data = df)
 
-#m1<-self_act_mean ~ overall_asp_importance
-#m2<-self_act_mean ~ overall_asp_importance + importance_acceptance + importance_affiliation + importance_community + #importance_finance
+tab_model(m1,m2)
 
-#zero-order correlations importances with outcomes (vitality or self_actualization)
+df %>%
+  select(c(mean_self_actualization,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
+  correlation::correlation()
+
+#vitality - importance
+m1 <- lm(mean_vitality ~ mean_asp_overall_importance, data = df)
+m2 <- lm(mean_vitality ~ mean_asp_overall_importance+
+            mean_asp_sai+
+            mean_asp_afi+
+            mean_asp_fsi+
+            mean_asp_cfi, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_vitality,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
+  correlation::correlation()
+
+#control orientation
+m1 <- lm(mean_control_orientation ~ mean_asp_overall_importance, data = df)
+m2 <- lm(mean_control_orientation ~ mean_asp_overall_importance+
+            mean_asp_sai+
+            mean_asp_afi+
+            mean_asp_fsi+
+            mean_asp_cfi, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_control_orientation,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
+  correlation::correlation()
+
+#depressive symptoms
+m1 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance, data = df)
+m2 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance+
+            mean_asp_sai+
+            mean_asp_afi+
+            mean_asp_fsi+
+            mean_asp_cfi, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_depressive_symptoms,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
+  correlation::correlation()
+
+#trait anxiety
+m1 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance, data = df)
+m2 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance+
+            mean_asp_sai+
+            mean_asp_afi+
+            mean_asp_fsi+
+            mean_asp_cfi, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_trait_anxiety,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
+  correlation::correlation()
+
+#self-actualization - chances
+m1 <- lm(mean_self_actualization ~ mean_asp_overall_chances, data = df)
+m2 <- lm(mean_self_actualization ~ mean_asp_overall_chances+
+            mean_asp_sac+
+            mean_asp_afc+
+            mean_asp_fsc+
+            mean_asp_cfc, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_self_actualization,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
+  correlation::correlation()
+
+#vitality - chances
+m1 <- lm(mean_vitality ~ mean_asp_overall_chances, data = df)
+m2 <- lm(mean_vitality ~ mean_asp_overall_chances+
+            mean_asp_sac+
+            mean_asp_afc+
+            mean_asp_fsc+
+            mean_asp_cfc, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_vitality,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
+  correlation::correlation()
+
+#control orientation - chances
+m1 <- lm(mean_control_orientation ~ mean_asp_overall_chances, data = df)
+m2 <- lm(mean_control_orientation ~ mean_asp_overall_chances+
+            mean_asp_sac+
+            mean_asp_afc+
+            mean_asp_fsc+
+            mean_asp_cfc, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_control_orientation,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
+  correlation::correlation()
+
+#depressive symptoms - chances
+m1 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances, data = df)
+m2 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances+
+            mean_asp_sac+
+            mean_asp_afc+
+            mean_asp_fsc+
+            mean_asp_cfc, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_depressive_symptoms,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
+  correlation::correlation()
+
+#trait anxiety - chances
+m1 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances, data = df)
+m2 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances+
+            mean_asp_sac+
+            mean_asp_afc+
+            mean_asp_fsc+
+            mean_asp_cfc, data = df)
+
+tab_model(m1,m2)
+
+df %>%
+  select(c(mean_trait_anxiety,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
+  correlation::correlation()
 ```
 
 ### group comparisons (assessment of relative centrality)
 ```{r}
-#z-standardize raw scores of all eight means (importances and chances)
-#form dichotomized variables: e.g. 1 if financial importance is higher than community, otherwise 0
-## FSI vs SAI
-## FSI vs AFI
-## FSI vs CFI
-## FSC vs SAC
-## FSC vs AFC
-## FSC vs CFC
+#scale all aspiration index means
+df <- df %>%
+  mutate(across(starts_with("mean_asp"), 
+                ~scale(.) %>% as.vector, 
+                .names = "{.col}_z"))
+
+#create binary variables by comparing z-score by person
+#1 = higher z-score for financial success
+df <- df %>% mutate(comp_fsi_afi = if_else(mean_asp_fsi_z > mean_asp_afi_z, 1, 0))
+df <- df %>% mutate(comp_fsi_sai = if_else(mean_asp_fsi_z > mean_asp_sai_z, 1, 0))
+df <- df %>% mutate(comp_fsi_cfi = if_else(mean_asp_fsi_z > mean_asp_cfi_z, 1, 0))
+
+df <- df %>% mutate(comp_fsc_afc = if_else(mean_asp_fsc_z > mean_asp_afc_z, 1, 0))
+df <- df %>% mutate(comp_fsc_sac = if_else(mean_asp_fsc_z > mean_asp_sac_z, 1, 0))
+df <- df %>% mutate(comp_fsc_cfc = if_else(mean_asp_fsc_z > mean_asp_cfc_z, 1, 0))
+
+#t-tests
+##self-actualization - importance
+report::report(t.test(mean_self_actualization ~ comp_fsi_afi,data = df))
+report::report(t.test(mean_self_actualization ~ comp_fsi_sai,data = df))
+report::report(t.test(mean_self_actualization ~ comp_fsi_cfi,data = df))
+
+##self-actualization - chances
+report::report(t.test(mean_self_actualization ~ comp_fsc_afc,data = df))
+report::report(t.test(mean_self_actualization ~ comp_fsc_sac,data = df))
+report::report(t.test(mean_self_actualization ~ comp_fsc_cfc,data = df))
+
+##vitality - importance
+report::report(t.test(mean_vitality ~ comp_fsi_afi,data = df))
+report::report(t.test(mean_vitality ~ comp_fsi_sai,data = df))
+report::report(t.test(mean_vitality ~ comp_fsi_cfi,data = df))
+
+##vitality - chances
+report::report(t.test(mean_vitality ~ comp_fsc_afc,data = df))
+report::report(t.test(mean_vitality ~ comp_fsc_sac,data = df))
+report::report(t.test(mean_vitality ~ comp_fsc_cfc,data = df))
+
+##control-orientation - importance
+report::report(t.test(mean_control_orientation ~ comp_fsi_afi,data = df))
+report::report(t.test(mean_control_orientation ~ comp_fsi_sai,data = df))
+report::report(t.test(mean_control_orientation ~ comp_fsi_cfi,data = df))
+
+##control-orientation - chances
+report::report(t.test(mean_control_orientation ~ comp_fsc_afc,data = df))
+report::report(t.test(mean_control_orientation ~ comp_fsc_sac,data = df))
+report::report(t.test(mean_control_orientation ~ comp_fsc_cfc,data = df))
+
+##depressive symptoms - importance
+report::report(t.test(mean_depressive_symptoms ~ comp_fsi_afi,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsi_sai,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsi_cfi,data = df))
+
+##depressive symptoms - chances
+report::report(t.test(mean_depressive_symptoms ~ comp_fsc_afc,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsc_sac,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsc_cfc,data = df))
+
+##trait anxiety - importance
+report::report(t.test(mean_trait_anxiety ~ comp_fsi_afi,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi,data = df))
+
+##trait anxiety - chances
+report::report(t.test(mean_trait_anxiety ~ comp_fsc_afc,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc,data = df))
 ```
 
 ### guiding principles
