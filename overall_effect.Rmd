@@ -39,7 +39,9 @@ This is the same code as used in Power_Analysis.rmd.
 
 ```{r}
 #cohens d calc. for t tests-----
-cohens_d <- esc::esc_mean_sd( grp1n=df$n, grp1m=df$mx, grp1sd = df$sdx, grp2n = df$n, grp2m = df$my, grp2sd = df$sdy, es.type="d")
+cohens_d <- esc::esc_mean_sd( grp1n=df$n, grp1m=df$mx, grp1sd = df$sdx, 
+                              grp2n = df$n, grp2m = df$my, grp2sd = df$sdy,
+                              es.type="d")
 cohens_d <- as.data.frame(cohens_d)
 
 cohens_d$variable <- df$variable
