@@ -1,0 +1,155 @@
+---
+title: "overall_effect"
+author: "Dominik Meindl"
+date: "2023-12-15"
+output: html_document
+---
+#Outline 
+This document will contain a simplified meta analysis for both the t-test and correlations to determine an overall effect found by either of the tests.
+
+# Packages
+```{r}
+#Packages----
+library(esc)
+library(readr)
+library(DescTools)
+library(metafor)
+```
+
+#Data Preparation
+This section will prepare the raw data for use in the later analysis. If you ran the Power_Analysis.rmd then the dataset for T-tests is already accessible to you and can be skipped. For sake of completeness it has been added here aswell.
+
+##Load Data
+This is raw data extracted from the publication. Such as Means, standard deviations, t values and significance (.05 or .10) as well as which study this data has been extracted from.
+
+df = all values concerning t tests
+df2 = all values concerning correlations
+
+```{r}
+#load data----
+df <- read_csv2("./data/ttests_raw.csv")
+df2 <- read_csv2("./data/correlations_raw.csv")
+```
+
+## Preparation of T-test data
+Calculate Cohens d for all t-tests using the esc package.
+Afterwards we will add the variable descriptions as well as the Study ID to the dataframe. 
+This is the same code as used in Power_Analysis.rmd.
+
+```{r}
+#cohens d calc. for t tests-----
+cohens_d <- esc::esc_mean_sd( grp1n=df$n, grp1m=df$mx, grp1sd = df$sdx, grp2n = df$n, grp2m = df$my, grp2sd = df$sdy, es.type="d")
+cohens_d <- as.data.frame(cohens_d)
+
+cohens_d$variable <- df$variable
+cohens_d$study <- df$study
+#write.csv2(cohens_d, "./data/cohens_d_ttests.csv") 
+```
+
+## Preparation of correlation data
+As the correlations reported by Casser & Ryan (1993) do not contain any confidence intervalls such need to be calculated.
+We use the DescTools package function CorCI which automatically calculates confidence intervalls around our correlations.
+For this to function we need to run the code in a for loop, as data output from this function cannot be added to a dataframe due to the format. Using a for loop circumvents that issue and gives us an intervall for the variables. 
+
+We then convert that data ouput into a dataframe again.
+
+```{r}
+df2 <- as.data.frame(df2)
+
+for(i in 1:nrow(df2)){
+    x <- DescTools::CorCI(df2$correlation[i], df2$n[i], conf.level = 0.95, alternative=c("two.sided"))
+  if(i == 1) {
+    correlations_CI <- x
+  } else {
+    correlations_CI <- rbind(correlations_CI, x) # Add new data to dataframe
+  }
+}
+
+correlations_CI <- as.data.frame(correlations_CI)
+```
+
+We then needed to add all identifiers back into the newly generated dataframe.
+Which we then save.
+
+```{r}
+correlations_CI$variable <- df2$variable
+correlations_CI$study <- df2$study
+correlations_CI$n <- df2$n
+
+#write.csv2(correlations_CI, "./data/correlations_CI.csv")
+```
+
+
+
+#Overall Effect analysis
+All following calculations are conducted using the metafor package.
+
+##Load previously prepared data
+```{r}
+ma2 <- read.csv2("data/cohens_d.csv")
+ma3 <- read.csv2("data/correlations_CI.csv")
+```
+
+##Summary effect T-test's
+
+For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects compareable.
+
+We then add a running id to each collumn.
+
+```{r}
+#---- summary effect t tests ---- 
+ma2$es <- abs(ma2$es)
+ma2$es.id <- seq.int(nrow(ma2))
+```
+
+Following this we use a Meta-Analysis via Multivariate/Multilevel Linear (Mixed-Effects) Models to calculate a model for the overall effect. Which we then look into using the summary function.
+
+```{r}
+overall.ma2<-rma.mv(yi=es,
+                    V=var,
+                    random=list(~1|study/es.id),
+                    tdist=TRUE,
+                    method="REML",
+                    slab=study,
+                    data=ma2)	
+
+summary(overall.ma2)
+```
+
+
+##Summary effect correlation's
+
+For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects compareable.
+
+We then add a running id to each collumn.
+
+```{r}
+#---- summary effect cor ----
+
+ma3$cor <- abs(ma3$cor)
+
+ma3$es.id <- seq.int(nrow(ma3))
+```
+
+For the analysis using the correlation data we need to add a variable containing the Variance of the correlation to do this we use the escalc function of the metafor package. Which uses the correlations and sample size to determine the variance which will then be added back into the dataset.
+
+```{r}
+x <- escalc(measure="COR", ri=ma3$cor, ni=ma3$n)
+ma3$var <- x$vi
+```
+
+Following this we use a Meta-Analysis via Multivariate/Multilevel Linear (Mixed-Effects) Models to calculate a model for the overall effect. Which we then look into using the summary function.
+
+```{r}
+overall.ma3<-rma.mv(yi=cor,
+                    V=var,
+                    random=list(~1|study/es.id),
+                    tdist=TRUE,
+                    method="REML",
+                    slab=study,
+                    data=ma3)	
+
+summary(overall.ma3)
+
+```
+
