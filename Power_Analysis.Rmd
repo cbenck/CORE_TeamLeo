@@ -95,8 +95,7 @@ cohens_d_r <- as.data.frame(cohens_d_r)
 cohens_d_r$variable <- df2$variable
 cohens_d_r$study <- df2$study
 
-#write_csv2(cohens_d, "./data/cohens_d_ttests.csv") 
-#write_csv2(cohens_d, "./data/cohens_d_corr.csv") 
+#write_csv2(cohens_d_r, "./data/cohens_d_corr.csv") 
 ```
 
 ## Power Tests for t-tests and correlations.
