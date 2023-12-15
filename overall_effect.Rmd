@@ -74,7 +74,7 @@ cohens_d <- as.data.frame(cohens_d)
 ```
 
 This approach gives new variable names which arent identical to the previous ones so we change those.
-We also drop two collumns as these only contain an empty collumn, and a collumn describing that we used SD and M per group for our D calculation.
+We also drop two columns as these only contain an empty column, and a column describing that we used SD and M per group for our D calculation.
 
 ```{r}
 new_names <- c("es","se","var",	"ci.lo",	"ci.hi","weight",	"sample.size","measure")
@@ -83,8 +83,8 @@ names(cohens_d) <- new_names
 cohens_d <- cohens_d%>%select(c(1:7)) #dropping last two columns as these are irrelevant
 ```
 
-We now add the beforementioned variable names and study id back into the dataframe and save it.
-This version is now identical to the old one, with the sole exception of it not containing a collumn "method" which only contains the value "d".
+We now add the before mentioned variable names and study id back into the dataframe and save it.
+This version is now identical to the old one, with the sole exception of it not containing a column "method" which only contains the value "d".
 
 ```{r}
 cohens_d$variable <- df$variable
@@ -93,11 +93,11 @@ cohens_d$study <- df$study
 ```
 
 ## Preparation of correlation data
-As the correlations reported by Casser & Ryan (1993) do not contain any confidence intervalls such need to be calculated.
-We use the DescTools package function CorCI which automatically calculates confidence intervalls around our correlations.
-For this to function we need to run the code in a for loop, as data output from this function cannot be added to a dataframe due to the format. Using a for loop circumvents that issue and gives us an intervall for the variables. 
+As the correlations reported by Kasser & Ryan (1993) do not contain any confidence intervals such need to be calculated.
+We use the DescTools package function CorCI which automatically calculates confidence intervals around our correlations.
+For this to function we need to run the code in a for loop, as data output from this function cannot be added to a dataframe due to the format. Using a for loop circumvents that issue and gives us an interval for the variables. 
 
-We then convert that data ouput into a dataframe again.
+We then convert that data output into a dataframe again.
 
 ```{r}
 df2 <- as.data.frame(df2)
@@ -165,9 +165,9 @@ summary(overall.ma2)
 
 ##Summary effect correlation's
 
-For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects compareable.
+For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects comparable.
 
-We then add a running id to each collumn.
+We then add a running id to each column.
 
 ```{r}
 #---- summary effect cor ----
