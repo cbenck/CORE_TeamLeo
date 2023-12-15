@@ -4,11 +4,11 @@ author: "Dominik Meindl"
 date: "2023-12-15"
 output: html_document
 ---
-#Outline 
+# Outline 
 This document will contain a simplified meta analysis for both the t-test and correlations to determine an overall effect found by either of the tests.
 
 # Packages
-```{r}
+```{r Package Loading, message=FALSE, warning=FALSE, include=FALSE}
 #Packages----
 #using base 4.3.2
 library(esc) #0.5.1
@@ -18,10 +18,10 @@ library(metafor) #4.4-0
 library(tidyverse) # 2.0.0
 ```
 
-#Data Preparation
+# Data Preparation
 This section will prepare the raw data for use in the later analysis. If you ran the Power_Analysis.rmd then the dataset for T-tests is already accessible to you and can be skipped. For sake of completeness it has been added here as well.
 
-##Load Data
+## Load Data
 This is raw data extracted from the publication by Kasser & Ryan (1993). Such as Means, standard deviations (SD), t values and significance (.05 or .10) as well as which study this data has been extracted from.
 
 df = all values concerning t tests
@@ -127,16 +127,16 @@ correlations_CI$n <- df2$n
 
 
 
-#Overall Effect analysis
+# Overall Effect analysis
 All following calculations are conducted using the metafor package.
 
-##Load previously prepared data
+## Load previously prepared data
 ```{r}
 ma2 <- read.csv2("data/cohens_d_ttests.csv")
 ma3 <- read.csv2("data/correlations_CI.csv")
 ```
 
-##Summary effect T-test's
+## Summary effect T-test's
 
 For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects compareable.
 
@@ -163,7 +163,7 @@ summary(overall.ma2)
 ```
 
 
-##Summary effect correlation's
+## Summary effect correlation's
 
 For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects comparable.
 
