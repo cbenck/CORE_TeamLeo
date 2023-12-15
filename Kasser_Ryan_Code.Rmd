@@ -10,29 +10,39 @@ output: html_document
 library(dplyr)
 library(readr)
 library(readxl)
+library(haven)
+library(misty)
 ```
 
 # Load Data
 ```{r}
-
+df <- read_sav("data/[PCIRR] Kasser and Ryan (1993) replication CR_1993 [Team Leo]_NOCHECKS_December 14, 2023_07.52.sav")
+df <- as.data.frame(df)
 #N initial:
 ```
 
 # Check data
 ## exclude incomplete cases
 ```{r}
-
+df<-subset(df, as.numeric(Progress) == 100)
 #N complete:
 ```
 
 ## exclude by conduction time (3SD faster than average)
 ```{r}
-
+df$Duration__in_seconds_<-as.numeric(df$Duration__in_seconds_)
+sd_duration<-(sd(df$Duration__in_seconds_)*3) #compute 3 times SD of duration
+mean_duration<-mean(df$Duration__in_seconds_) #compute mean duration
+cut_duration<-mean_duration-sd_duration #minimum time cut-off = mean time - three SD
+df<-subset(df,df$Duration__in_seconds_>=cut_duration) #filter out cases with shorter usage
 #N after time exclusion:
 ```
 
 ## exclude by missed attention checks (3 attention checks)
 ```{r}
+df<-subset(df, AT_1 == 5)
+df<-subset(df, AT_2 == 1)
+df<-subset(df, AT_3 == 3)
 
 #N after attention exclusion (final N):
 ```
@@ -40,30 +50,71 @@ library(readxl)
 # Clean data
 ## exclude columns of attention checks
 ```{r}
+df <- df %>% select(-c("AT_1", "AT_2", "AT_3"))
 
 ```
 
-## exclude non-needed columns
+## TODOexclude non-needed columns
 ```{r}
 
 ```
-
-## rename variables
+## recode variables
 ```{r}
+#self-actualization
+df <- df %>%
+  mutate(across(grep("^SA_.*_R$", names(df), value = TRUE), ~case_when(
+    . == 1 ~ 4,
+    . == 2 ~ 3,
+    . == 3 ~ 2,
+    . == 4 ~ 1,
+    TRUE ~ . # keeps original value if none of the above conditions are met
+  )))
+```
+
+
+## rename variables (remove _R from recode variables)
+```{r}
+names(df) <- ifelse(grepl("^SA_", names(df)), gsub("_R$", "", names(df)), names(df))
 
 ```
 
 #Descriptives
 ## compute reliabilities
 ```{r}
+#Aspiration index: importance
+psych::alpha(df%>% select(starts_with("ASP_SAI")))[[1]]
+psych::alpha(df%>% select(starts_with("ASP_AFI")))[[1]]
+psych::alpha(df%>% select(starts_with("ASP_CFI")))[[1]]
+psych::alpha(df%>% select(starts_with("ASP_FSI")))[[1]]
+
+#Aspiration index: chances
+psych::alpha(df%>% select(starts_with("ASP_SAC")))[[1]]
+psych::alpha(df%>% select(starts_with("ASP_AFC")))[[1]]
+psych::alpha(df%>% select(starts_with("ASP_CFC")))[[1]]
+psych::alpha(df%>% select(starts_with("ASP_FSC")))[[1]]
+
+#Guiding principles:
+## money
+psych::alpha(df%>%select(grep("^GPR_.*_1$", names(df), value = TRUE)))[[1]]
+##family security
+psych::alpha(df%>%select(grep("^GPR_.*_2$", names(df), value = TRUE)))[[1]]
+##global welfare
+psych::alpha(df%>%select(grep("^GPR_.*_3$", names(df), value = TRUE)))[[1]]
+##spirituality
+psych::alpha(df%>%select(grep("^GPR_.*_4$", names(df), value = TRUE)))[[1]]
+##hedonism
+psych::alpha(df%>%select(grep("^GPR_.*_5$", names(df), value = TRUE)))[[1]]
+
 
 ```
 
 ## demographics
 ```{r}
 #describe age:
+psych::describe(df$age)
 
 #describe best identified gender:
+table(df$gender)
 
 ```
 
