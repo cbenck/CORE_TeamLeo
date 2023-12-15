@@ -7,11 +7,8 @@ output: html_document
 
 # Packages
 ```{r}
-<<<<<<< HEAD
-#Packages----
-=======
 #Packages---- using R4.3.2
->>>>>>> 5d4051313b80a1de4f135399ef3fe5b6088057e5
+
 library(pwr) #1.3-0
 library(esc) #0.5.1
 library(readr) #2.1.4
@@ -98,11 +95,8 @@ cohens_d_r <- as.data.frame(cohens_d_r)
 cohens_d_r$variable <- df2$variable
 cohens_d_r$study <- df2$study
 
-<<<<<<< HEAD
 #write_csv2(cohens_d, "./data/cohens_d_ttests.csv") 
-=======
 #write_csv2(cohens_d, "./data/cohens_d_corr.csv") 
->>>>>>> 5d4051313b80a1de4f135399ef3fe5b6088057e5
 ```
 
 ## Power Tests for t-tests and correlations.
