@@ -12,6 +12,8 @@ library(readr)
 library(readxl)
 library(haven)
 library(misty)
+library(tidyr)
+library(ggplot2)
 ```
 
 # Load Data
@@ -122,6 +124,7 @@ names(df) <- ifelse(grepl("^AN_", names(df)), gsub("_R$", "", names(df)), names(
 #Descriptives
 ## compute reliabilities
 ```{r}
+###independent variables
 #Aspiration index: importance
 psych::alpha(df%>% select(starts_with("ASP_SAI")))[[1]]
 psych::alpha(df%>% select(starts_with("ASP_AFI")))[[1]]
@@ -146,6 +149,7 @@ psych::alpha(df%>%select(grep("^GPR_.*_4$", names(df), value = TRUE)))[[1]]
 ##hedonism
 psych::alpha(df%>%select(grep("^GPR_.*_5$", names(df), value = TRUE)))[[1]]
 
+###dependent variables
 #self-actualization
 psych::alpha(df%>% select(starts_with("SA_")))[[1]]
 #vitality
@@ -156,11 +160,6 @@ psych::alpha(df%>%select(grep("^CO_.*_C$", names(df), value = TRUE)))[[1]]
 psych::alpha(df%>% select(starts_with("CES_")))[[1]]
 #trait anxiety
 psych::alpha(df%>% select(starts_with("AN_")))[[1]]
-test
-
-
-
-
 ```
 
 ## demographics
@@ -169,23 +168,103 @@ test
 psych::describe(df$age)
 
 #describe best identified gender:
-table(df$gender)
-
+table(df$gender) #1 = male, 2 = female, 3 = other, 4 = rather not disclose
 ```
 
 ## compute means
 ```{r}
+###independent variables
+#aspiration index: importances
+df <- df %>% mutate(mean_asp_asi = rowMeans(select(., starts_with("ASP_SAI")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_afi = rowMeans(select(., starts_with("ASP_AFI")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_cfi = rowMeans(select(., starts_with("ASP_CFI")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_fsi = rowMeans(select(., starts_with("ASP_FSI")), na.rm = TRUE))
 
+#aspiration index: overall importance
+df <- df %>%
+  mutate(mean_asp_overall_importance = rowMeans(select(.,starts_with("ASP_SAI"),
+                                                         starts_with("ASP_AFI"),
+                                                         starts_with("ASP_CFI"),
+                                                         starts_with("ASP_FSI")), 
+                                                        na.rm = TRUE))
+#aspiration index: chances
+df <- df %>% mutate(mean_asp_asc = rowMeans(select(., starts_with("ASP_SAC")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_afc = rowMeans(select(., starts_with("ASP_AFC")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_cfc = rowMeans(select(., starts_with("ASP_CFC")), na.rm = TRUE))
+df <- df %>% mutate(mean_asp_fsc = rowMeans(select(., starts_with("ASP_FSC")), na.rm = TRUE))
+
+#aspiration index: overall chances
+df <- df %>%
+  mutate(mean_asp_overall_chances = rowMeans(select(.,starts_with("ASP_SAC"),
+                                                         starts_with("ASP_AFC"),
+                                                         starts_with("ASP_CFC"),
+                                                         starts_with("ASP_FSC")), 
+                                                        na.rm = TRUE))
+
+#guiding principles: mean position in rank-ordering across three rankings
+#money
+df <- df %>% mutate(mean_gpr_money = 
+                      rowMeans(select(., grep("^GPR_.*_1$", names(df), value = TRUE)), 
+                      na.rm = TRUE))
+#family security
+df <- df %>% mutate(mean_gpr_family_security = 
+                      rowMeans(select(., grep("^GPR_.*_2$", names(df), value = TRUE)), 
+                      na.rm = TRUE))
+#global welfare
+df <- df %>% mutate(mean_gpr_global_welfare = 
+                      rowMeans(select(., grep("^GPR_.*_3$", names(df), value = TRUE)), 
+                      na.rm = TRUE))
+#spirituality
+df <- df %>% mutate(mean_gpr_spirituality = 
+                      rowMeans(select(., grep("^GPR_.*_4$", names(df), value = TRUE)), 
+                      na.rm = TRUE))
+#hedonism
+df <- df %>% mutate(mean_gpr_hedonism = 
+                      rowMeans(select(., grep("^GPR_.*_5$", names(df), value = TRUE)), 
+                      na.rm = TRUE))
+
+###dependent variables
+#self-actualization
+df <- df %>% mutate(mean_self_actualization = 
+                      rowMeans(select(., starts_with("SA_")), na.rm = TRUE))
+#vitality
+df <- df %>% mutate(mean_self_actualization = 
+                      rowMeans(select(., starts_with("VI_")), na.rm = TRUE))
+#control orientation
+df <- df %>% mutate(mean_control_orientation = 
+                      rowMeans(select(., grep("^CO_.*_C$", names(df), value = TRUE)), 
+                      na.rm = TRUE))
+
+#depressive symptoms
+df <- df %>% mutate(mean_depressive_symptoms = 
+                      rowMeans(select(., starts_with("CES_")), na.rm = TRUE))
+
+#trait anxiety
+df <- df %>% mutate(mean_trait_anxiety = 
+                      rowMeans(select(., starts_with("AN_")), na.rm = TRUE))
 ```
 
 ## describe distribution of means
 ```{r}
+#numerically describe all means
+df_means <- df %>% select (starts_with("mean"))
+df_means_describe <- psych::describe(df_means) #save descriptives in extra df
+
+#plot all means
+long_df_means <- pivot_longer(df_means, cols = everything(), names_to = "variable", values_to = "value")
+
+ggplot(long_df_means, aes(x = value)) +
+  geom_histogram(bins = 30, fill = "blue", color = "black") +
+  facet_wrap(~ variable, scales = "free_x") +
+  theme_minimal() +
+  labs(title = "Histograms of All Columns", x = "Value", y = "Frequency")
 
 ```
 
 ## intercorrelations of means
 ```{r}
-
+df_means %>%
+  correlation::correlation()
 ```
 
 # Analysis Kasser & Ryan (1993)
