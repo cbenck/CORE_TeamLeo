@@ -156,6 +156,7 @@ psych::alpha(df%>%select(grep("^CO_.*_C$", names(df), value = TRUE)))[[1]]
 psych::alpha(df%>% select(starts_with("CES_")))[[1]]
 #trait anxiety
 psych::alpha(df%>% select(starts_with("AN_")))[[1]]
+test
 
 
 
