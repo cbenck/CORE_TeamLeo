@@ -84,7 +84,7 @@ names(results_df) <- c("es", "var", "se", "ci.lo", "ci.hi")
 # Merging results with the original dataframe
 cohens_d <- cbind(df, results_df)
 
-write.table(cohens_d, "./data/cohens_d_ttests.csv")
+#write.csv2(cohens_d, "./data/cohens_d_ttests.csv")
 ```
 
 ## Preparation of correlation data
