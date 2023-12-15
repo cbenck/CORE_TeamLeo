@@ -596,15 +596,68 @@ report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac,data = df))
 report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc,data = df))
 ```
 
-### guiding principles
+### guiding principles correlations
 ```{r}
-#average position across three sets for each guiding principle
-#assess five guiding principles but only consider three
-#correlate with measures (e.g. self_actualization)
+###correlations of mean rank-order of guiding principles with outcomes
+#money
+df %>%
+  select(c(mean_gpr_money,mean_self_actualization,mean_vitality,mean_control_orientation,
+           mean_depressive_symptoms,mean_trait_anxiety))%>%
+  correlation::correlation()
+
+#family security
+df %>%
+  select(c(mean_gpr_family_security,mean_self_actualization,mean_vitality,
+           mean_control_orientation,mean_depressive_symptoms,mean_trait_anxiety))%>%
+  correlation::correlation()
+
+#global welfare
+df %>%
+  select(c(mean_gpr_global_welfare,mean_self_actualization,mean_vitality,
+           mean_control_orientation,mean_depressive_symptoms,mean_trait_anxiety))%>%
+  correlation::correlation()
+
+
 
 #centrality analysis (through z-standardization again)
 #t-tests
 ```
+
+### guiding principles comparisons
+```{r}
+#scale all guiding principles means
+df <- df %>%
+  mutate(across(starts_with("mean_gpr"), 
+                ~scale(.) %>% as.vector, 
+                .names = "{.col}_z"))
+
+#create binary variables by comparing z-score by person
+#1 = higher z-score for financial success
+df <- df %>% mutate(comp_money_family = if_else(mean_gpr_money_z > mean_gpr_family_security_z, 1, 0))
+df <- df %>% mutate(comp_money_welfare = if_else(mean_gpr_money_z > mean_gpr_global_welfare_z, 1, 0))
+
+#t-tests
+##self-actualization
+report::report(t.test(mean_self_actualization ~ comp_money_family,data = df))
+report::report(t.test(mean_self_actualization ~ comp_money_welfare,data = df))
+
+##vitality
+report::report(t.test(mean_vitality ~ comp_money_family,data = df))
+report::report(t.test(mean_vitality ~ comp_money_welfare,data = df))
+
+##control orientation
+report::report(t.test(mean_control_orientation ~ comp_money_family,data = df))
+report::report(t.test(mean_control_orientation ~ comp_money_welfare,data = df))
+
+##depressive symptoms
+report::report(t.test(mean_depressive_symptoms ~ comp_money_family,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_money_welfare,data = df))
+
+##trait anxiety
+report::report(t.test(mean_trait_anxiety ~ comp_money_family,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_money_welfare,data = df))
+```
+
 
 
 
