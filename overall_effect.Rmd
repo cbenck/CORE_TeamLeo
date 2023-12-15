@@ -15,17 +15,35 @@ library(esc) #0.5.1
 library(readr) #2.1.4
 library(DescTools) #0.99.52
 library(metafor) #4.4-0
-library(tidyverse)
+library(tidyverse) # 2.0.0
 ```
 
 #Data Preparation
-This section will prepare the raw data for use in the later analysis. If you ran the Power_Analysis.rmd then the dataset for T-tests is already accessible to you and can be skipped. For sake of completeness it has been added here aswell.
+This section will prepare the raw data for use in the later analysis. If you ran the Power_Analysis.rmd then the dataset for T-tests is already accessible to you and can be skipped. For sake of completeness it has been added here as well.
 
 ##Load Data
-This is raw data extracted from the publication. Such as Means, standard deviations, t values and significance (.05 or .10) as well as which study this data has been extracted from.
+This is raw data extracted from the publication by Kasser & Ryan (1993). Such as Means, standard deviations (SD), t values and significance (.05 or .10) as well as which study this data has been extracted from.
 
 df = all values concerning t tests
+- mx: mean of first variable
+- my: mean of second variable (FSI/FSC)
+- sdx: sd of first variable
+- sdy: sd of second variable (FSI/FSC)
+- t: t-value
+- sig05: 1 if p <.05
+- sig10: 1 if p <.10
+- study: 1 for study 1, 2 for study 2
+- n: sample size
+
 df2 = all values concerning correlations
+- beta: beta values
+- correlation: Pearsons r
+- sig05_beta: 1 if p <.05 (beta)
+- sig05_cor: 1 if p <.05 (r)
+- sig10_beta: 1 if p <.10 (beta)
+- sig10_cor: 1 if p <.10 (r)
+- study: 1 for study 1, 2 for study 2
+- n: sample size
 
 ```{r}
 #load data----
@@ -62,7 +80,7 @@ We also drop two collumns as these only contain an empty collumn, and a collumn 
 new_names <- c("es","se","var",	"ci.lo",	"ci.hi","weight",	"sample.size","measure")
 names(cohens_d) <- new_names
 
-cohens_d <- cohens_d%>%select(c(1:7)) #dropping last two collumns as these are irrelevant
+cohens_d <- cohens_d%>%select(c(1:7)) #dropping last two columns as these are irrelevant
 ```
 
 We now add the beforementioned variable names and study id back into the dataframe and save it.
