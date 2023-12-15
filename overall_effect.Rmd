@@ -10,10 +10,11 @@ This document will contain a simplified meta analysis for both the t-test and co
 # Packages
 ```{r}
 #Packages----
-library(esc)
-library(readr)
-library(DescTools)
-library(metafor)
+#using base 4.3.2
+library(esc) #0.5.1
+library(readr) #2.1.4
+library(DescTools) #0.99.52
+library(metafor) #4.4-0
 ```
 
 #Data Preparation
