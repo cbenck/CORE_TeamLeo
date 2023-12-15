@@ -11,6 +11,7 @@ output: html_document
 library(pwr) #1.3-0
 library(esc) #0.5.1
 library(readr) #2.1.4
+library(tidyverse) #2.0.0
 ```
 
 #Load Data
@@ -63,7 +64,7 @@ This version is now identical to the old one, with the sole exception of it not 
 ```{r}
 cohens_d$variable <- df$variable
 cohens_d$study <- df$study
-#write.csv2(cohens_d, "./data/cohens_d_ttests.csv")
+#write_csv2(cohens_d, "./data/cohens_d_ttests.csv")
 ```
 
 #Power Transformations - Cohens D Values of correlations
@@ -75,7 +76,7 @@ cohens_d_r <- as.data.frame(cohens_d_r)
 cohens_d_r$variable <- df2$variable
 cohens_d_r$study <- df2$study
 
-#write.csv2(cohens_d, "./data/cohens_d_ttests.csv") 
+#write_csv2(cohens_d, "./data/cohens_d_corr.csv") 
 ```
 
 ## Power Tests for t-tests and correlations.
