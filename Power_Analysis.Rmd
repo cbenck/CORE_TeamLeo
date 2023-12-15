@@ -31,11 +31,19 @@ Afterwards we will add the variable descriptions as well as the Study ID to the 
 
 ```{r}
 #cohens d calc. for t tests-----
+
 cohens_d <- esc::esc_mean_sd( grp1n=df$n, grp1m=df$mx, grp1sd = df$sdx, grp2n = df$n, grp2m = df$my, grp2sd = df$sdy, es.type="d")
 cohens_d <- as.data.frame(cohens_d)
 
 cohens_d$variable <- df$variable
 cohens_d$study <- df$study
+
+#cohens d calc. for correlations ----
+cohens_d_r <- esc::cohens_d(df2$correlation) #as there is no SD given for the variables (check with LEO to see if im not misinterpreting something here)
+cohens_d_r <- as.data.frame(cohens_d_r)
+
+cohens_d_r$variable <- df2$variable
+cohens_d_r$study <- df2$study
 
 #write.csv2(cohens_d, "./data/cohens_d_ttests.csv") 
 ```
