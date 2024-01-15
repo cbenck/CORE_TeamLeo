@@ -39,7 +39,7 @@ df2 = all values concerning correlations
 - study: 1 for study 1, 2 for study 2
 - n: sample size
 
-```{r}
+```{r Data Loading, message=FALSE}
 #load data----
 df <- read_csv2("./data/ttests_raw.csv")
 df2 <- read_csv2("./data/correlations_raw.csv")
