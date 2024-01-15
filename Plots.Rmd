@@ -13,7 +13,7 @@ This document will contain the codes to produce all plots used in the reporting 
 library(forester) # 0.2.0
 library(tidyverse) # 2.0.0
 library(dplyr) # 1.1.4
-
+library(DescTools) # 0.99.52
 #Installing Forester
 
 #install.packages("devtools")
@@ -44,14 +44,25 @@ table = all values concerning t tests
 - ci.lo: Lower bound of cofidence intervall around es
 - ci.hi: Upper bound of cofidence intervall around es
 
+df2 = all values concerning correlations
+- variable: variable Name 
+- beta: beta values for correlations
+- correlation: cor. r value
+- sig05_beta: 1 if beta is sig. with p<0.05, NA if not
+- sig05_cor: 1 if cor. is sig. with p<0.05, NA if not
+- sig10_beta: 1 if beta is sig. with p<0.10, NA if not
+- sig10_cor: 1 if cor. is sig. with p<0.10, NA if not
+- study: 1 for study 1, 2 for study 2
+- n: number of participants 
+
 
 ```{r}
 table <- read.csv2("./data/cohens_d_ttests.csv")
-table2 <- 
+df2 <- read.csv2("./data/correlations_raw.csv")
 ```
 
 
-## Cohens_D for t tests
+# T-Tests data preparation (Cohens D T tests)
 We will start by preparing all data used in the plots as forester requires a certain data structure.
 Here we will add the lines telling us which variable and study is used.
 
@@ -225,7 +236,7 @@ if (!is.na(AN_G2)) { #Add grouping variable
 }
 ```
 
-### Final preperations
+## Final preperations
 Now that we have added all neccesarry information into the dataset we can now rbind them back into one dataframe
 We then add indentations to the headers, and rename the variables to make it easier to read.
 
@@ -255,6 +266,221 @@ table$Variable <- ifelse(is.na(table$study), #add two indentation in each row co
 write.csv2(table,"./data/forester_data/cohens_d_forester.csv" )
 ```
 
+
+
+# Correlation data preparation (Cohens D Cor)
+As the original publication did not compute confidence intervalls for correlations we have to add them before we transform the data to make it compatible with forester, using the DescTools package.
+
+```{r}
+df2 <- as.data.frame(df2) #make sure df2 is a dataframe
+
+for(i in 1:nrow(df2)){ #Create a conf intervall around the correlation and then rbind them together.
+  x <- DescTools::CorCI(df2$correlation[i], df2$n[i], conf.level = 0.95, alternative=c("two.sided"))
+  if(i == 1) {
+    correlations_CI <- x
+  } else {
+    correlations_CI <- rbind(correlations_CI, x) # Add new data to dataframe
+  }
+}
+
+correlations_CI <- as.data.frame(correlations_CI) #make sure correlations_CI is a dataframe
+
+#Add back collumns nessecary for identification
+correlations_CI$variable <- df2$variable
+correlations_CI$study <- df2$study
+correlations_CI$n <- df2$n
+
+#write.csv2(correlations_CI, "./data/correlations_CI.csv")
+```
+
+##Load prepared correlation data
+To avoid rerunning previous code
+```{r}
+table2 <- read.csv2("./data/correlations_CI.csv")
+table2 <- table2%>%select(-1)
+```
+
+## Preparing data structure, analogous to T-Test data
+We will start by preparing all data used in the plots as forester requires a certain data structure.
+Here we will add the lines telling us which variable and study is used.
+
+First we start by subsetting the dataset using only the neccesary collumns.
+We then sort those by the Suffixes (Suffix = Variable) and study.
+
+```{r}
+#Subsetting data and renaming variables for easier datahandling
+table2 <- table2%>%select(-c("n"))
+
+table2 <- table2 %>%  #renaming variable
+              rename(
+                Variable = variable
+ )
+
+table2$header <- NA
+
+# Sort data
+suf <- sub(".*_", "", table2$Variable) # Extract the suffix from the 'Variable' column
+
+x <- c("SA", "VI", "CO", "DP", "AN") #Order in which suffixes should be arranged
+suf_factor <- factor(suf, levels = x) # Convert suffixes to a factor with levels as defined in the custom order
+
+table2 <- table2[order(suf_factor, table2$study), ] # Order the dataframe by the factor and study
+rownames(table) <- NULL
+```
+
+With the data sorted we can now add the Header and Subheaders.
+
+## Headers and Subheaders
+For Forester to visualize the data in a nice way we need to add headers containing the Names of the variables.
+To do this we determine the first time a suffix appears and then interject a collumn containing the header before it.
+
+First we create an empty row which we will use to fill in the text neccesary for the headers. 
+```{r}
+ER2 <- data.frame(matrix(NA, ncol = ncol(table2), nrow = 1)) #create an empty row
+colnames(ER2) <- colnames(table2) #adapt the structure of df table
+```
+
+Then we make two rows, one for Study 1 and one for Study 2 which we will later use as subheaders.
+Here we also add an indication in the collumn "header" to allow us to mark this as a subgroup.
+
+```{r}
+G1_2 <- ER2
+G1_2$Variable <- "Study 1" #Add the header title, in this case indicating the study
+G1_2$header <- 1
+
+G2_2 <- ER2
+G2_2$Variable <- "Study 2" #Add the header title, in this case indicating the study
+G2_2$header <- 1
+```
+
+### Self Actualization
+We will then Subset each variable, add in the header (Full variable name), and the subheader (Study 1 or 2). To do this we determine the first appearance of the suffix, as well as the first time a 1 or 2 appear in the study collumn. We then add the row containing the Variable and Study. We do this for every variable.
+
+```{r}
+SA_S2 <- table2[grepl("_SA$", table2$Variable), ] #Subset all Self actualization variables
+
+SA_H2 <- data.frame(matrix(NA, ncol = ncol(table2), nrow = 1)) #create an empty row
+colnames(SA_H2) <- colnames(table2) #adapt the structure of df table
+SA_H2$Variable <- "Self Actualization" #Add the header title, always the full name of the suffix
+
+SA2 <- fsi(SA_S2, "Variable", "_SA") # Determine the position of the first time a variable/suffix appears in the dataset
+if (!is.na(SA2)) { #Self Actualization (SA)
+  SA_S2 <- rbind(SA_S2[1:(SA2) - 1, ], SA_H2, SA_S2[SA2:nrow(SA_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+SA_G1_2<- which(SA_S2$study == 1)[1]
+if (!is.na(SA_G1_2)) { #Add grouping variable
+  SA_S2 <- rbind(SA_S2[1:(SA_G1_2) - 1, ], G1_2, SA_S2[SA_G1_2:nrow(SA_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+SA_G2_2<- which(SA_S2$study == 2)[1]
+if (!is.na(SA_G2_2)) { #Add grouping variable
+  SA_S2 <- rbind(SA_S2[1:(SA_G2_2) - 1, ], G2_2, SA_S2[SA_G2_2:nrow(SA_S2), ]) # Insert the header before each new appearance of a suffix
+}
+```
+
+### Vitality
+```{r}
+VI_S2 <- table2[grepl("_VI$", table2$Variable), ] #Subset all Vitality variables
+
+VI_H2 <- data.frame(matrix(NA, ncol = ncol(table2), nrow = 1)) #create an empty row
+colnames(VI_H2) <- colnames(table2) #adapt the structure of df table
+VI_H2$Variable <- "Vitality" #Add the header title, always the full name of the suffix
+
+VI2 <- fsi(VI_S2, "Variable", "_VI") # Determine the position of the first time a variable/suffix appears in the dataset
+if (!is.na(VI2)) { #Vitality (VI)
+  VI_S2 <- rbind(VI_S2[1:(VI2) - 1, ], VI_H2, VI_S2[VI2:nrow(VI_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+VI_G1_2<- which(VI_S2$study == 1)[1]
+if (!is.na(VI_G1_2)) { #Add grouping variable
+  VI_S2 <- rbind(VI_S2[1:(VI_G1_2) - 1, ], G1_2, VI_S2[VI_G1_2:nrow(VI_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+VI_G2_2<- which(VI_S2$study == 2)[1]
+if (!is.na(VI_G2_2)) { #Add grouping variable
+  VI_S2 <- rbind(VI_S2[1:(VI_G2_2) - 1, ], G2_2, VI_S2[VI_G2_2:nrow(VI_S2), ]) # Insert the header before each new appearance of a suffix
+}
+```
+
+### Depression
+```{r}
+DP_S2 <- table2[grepl("_DP$", table2$Variable), ] #Subset all Depression variables
+
+DP_H2 <- data.frame(matrix(NA, ncol = ncol(table2), nrow = 1)) #create an empty row
+colnames(DP_H2) <- colnames(table2) #adapt the structure of df table
+DP_H2$Variable <- "Depression" #Add the header title, always the full name of the suffix
+
+DP2 <- fsi(DP_S2, "Variable", "_DP") # Determine the position of the first time a variable/suffix appears in the dataset
+if (!is.na(DP2)) { #Depression (DP)
+  DP_S2 <- rbind(DP_S2[1:(DP2) - 1, ], DP_H2, DP_S2[DP2:nrow(DP_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+DP_G1_2<- which(DP_S2$study == 1)[1]
+if (!is.na(DP_G1_2)) { #Add grouping variable
+  DP_S2 <- rbind(DP_S2[1:(DP_G1_2) - 1, ], G1_2, DP_S2[DP_G1_2:nrow(DP_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+DP_G2_2<- which(DP_S2$study == 2)[1]
+if (!is.na(DP_G2_2)) { #Add grouping variable
+  DP_S2 <- rbind(DP_S2[1:(DP_G2_2) - 1, ], G2_2, DP_S2[DP_G2_2:nrow(DP_S2), ]) # Insert the header before each new appearance of a suffix
+}
+```
+
+### Anxiety
+```{r}
+AN_S2 <- table2[grepl("_AN$", table2$Variable), ] #Subset all Anxiety variables
+
+AN_H2 <- data.frame(matrix(NA, ncol = ncol(table2), nrow = 1)) #create an empty row
+colnames(AN_H2) <- colnames(table2) #adapt the structure of df table
+AN_H2$Variable <- "Anxiety" #Add the header title, always the full name of the suffix
+
+AN2 <- fsi(AN_S2, "Variable", "_AN") # Determine the position of the first time a variable/suffix appears in the dataset
+if (!is.na(AN2)) { #Anxiety (AN)
+  AN_S2 <- rbind(AN_S2[1:(AN2) - 1, ], AN_H2, AN_S2[AN2:nrow(AN_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+AN_G1_2<- which(AN_S2$study == 1)[1]
+if (!is.na(AN_G1_2)) { #Add grouping variable
+  AN_S2 <- rbind(AN_S2[1:(AN_G1_2) - 1, ], G1_2, AN_S2[AN_G1_2:nrow(AN_S2), ]) # Insert the header before each new appearance of a suffix
+}
+
+AN_G2_2<- which(AN_S2$study == 2)[1]
+if (!is.na(AN_G2_2)) { #Add grouping variable
+  AN_S2 <- rbind(AN_S2[1:(AN_G2_2) - 1, ], G2_2, AN_S2[AN_G2_2:nrow(AN_S2), ]) # Insert the header before each new appearance of a suffix
+}
+```
+
+## Final preperations
+Now that we have added all neccesarry information into the dataset we can now rbind them back into one dataframe
+We then add indentations to the headers, and rename the variables to make it easier to read.
+
+```{r}
+table2 <- rbind(SA_S2,VI_S2,DP_S2, AN_S2) #rbind subsetted dataframes back together
+
+
+table2$Variable <- ifelse(is.na(table2$header), #add an indentation to variables containing an entry in the header collumn
+                         table2$Variable,
+                         paste0("  ", table2$Variable))
+
+# Change the value in the Variable column based on multiple conditions
+table2$Variable <- ifelse(grepl("SAI_", table2$Variable), "Self Accpetnace I",
+                  ifelse(grepl("AFI_", table2$Variable), "Affiliation I",
+                  ifelse(grepl("CFI_", table2$Variable), "Community Feeling I",
+                  ifelse(grepl("SAC_", table2$Variable), "Self Acceptance C",
+                  ifelse(grepl("AFC_", table2$Variable), "Affiliation C",
+                  ifelse(grepl("CFC_", table2$Variable), "Community Feeling C",
+                  ifelse(grepl("FSI_", table2$Variable), "Financial Success I",
+                  ifelse(grepl("FSC_", table2$Variable), "Financial Success C",
+                    table2$Variable))))))))
+
+table2$Variable <- ifelse(is.na(table2$study), #add two indentation in each row containing a Study ID
+                         table2$Variable,
+                         paste0("       ", table2$Variable))
+
+write.csv2(table2,"./data/forester_data/correlations_CI_forester.csv" )
+```
+
 # Creating the Plots
 
 ##Reload Data to avoid running full script
@@ -262,7 +488,8 @@ write.csv2(table,"./data/forester_data/cohens_d_forester.csv" )
 table <- read.csv2("./data/forester_data/cohens_d_forester.csv") #reload only dataset, avoids to repeat previous steps
 table <- table %>% select(-1) #remove x collumn
 
-table2 <-
+table2 <- read.csv2("./data/forester_data/correlations_CI_forester.csv") #reload only dataset, avoids to repeat previous steps
+table2 <- table2 %>% select(-1) #remove x collumn
 ```
 
 ## Forest Plot for Cohens_D
@@ -284,3 +511,20 @@ forester(left_side_data = table_data,
 #         font_family = "Fira Sans") # Comment this if your using a mac or did not install the alternative font
 ```
 
+## Forest Plot for correlations
+Using the forester Function we not print a forest plot using our previously prepared data.
+```{r}
+
+table_data2 <- data.frame(Variable = table2$Variable)
+
+forester(left_side_data = table_data2,
+         estimate = table2$cor,
+         ci_low = table2$lwr.ci,
+         ci_high = table2$upr.ci,
+         display = FALSE,
+         xlim = c(-1, 1),
+         estimate_col_name = "COR (95% CI)",
+         estimate_precision = 3,
+         stripe_colour = "#d3d3d3",
+         file_path = here::here("plots/Correlations_CI_Plots_CR1993.png"))
+```
