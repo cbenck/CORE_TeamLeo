@@ -116,6 +116,13 @@ G2$header <- 1
 We will then Subset each variable, add in the header (Full variable name), and the subheader (Study 1 or 2). To do this we determine the first appearance of the suffix, as well as the first time a 1 or 2 appear in the study collumn. We then add the row containing the Variable and Study. We do this for every variable.
 
 ```{r}
+
+fsi <- function(df, column, suffix) { #function determining the first position of a suffix (not very usefull in this case as i solves this by subsetting, i left the code in as to not have to rewrite it and make it work on every piece of data here avoiding to just inject a row)
+  matches <- grepl(suffix, df[[column]])
+  which(matches)[1]
+}
+
+
 SA_S <- table[grepl("_SA$", table$Variable), ] #Subset all Self actualization variables
 
 SA_H <- data.frame(matrix(NA, ncol = ncol(table), nrow = 1)) #create an empty row
