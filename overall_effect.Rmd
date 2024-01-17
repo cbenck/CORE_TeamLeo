@@ -139,7 +139,7 @@ We then add a running id to each collumn.
 
 ```{r}
 #---- summary effect t tests ---- 
-ma2$es <- abs(ma2$es)
+ma2$es <- abs(ma2$es) #using absolute to turn all effects positive
 ma2$es.id <- seq.int(nrow(ma2))
 ```
 
@@ -167,7 +167,7 @@ We then add a running id to each column.
 ```{r}
 #---- summary effect cor ----
 
-ma3$cor <- abs(ma3$cor)
+ma3$cor <- abs(ma3$cor) #using abs to turn all results positive
 
 ma3$es.id <- seq.int(nrow(ma3))
 ```
@@ -175,7 +175,7 @@ ma3$es.id <- seq.int(nrow(ma3))
 For the analysis using the correlation data we need to add a variable containing the Variance of the correlation to do this we use the escalc function of the metafor package. Which uses the correlations and sample size to determine the variance which will then be added back into the dataset.
 
 ```{r}
-x <- escalc(measure="COR", ri=ma3$cor, ni=ma3$n)
+x <- escalc(measure="COR", ri=ma3$cor, ni=ma3$n) #calc variance of correlations
 ma3$var <- x$vi
 ```
 
