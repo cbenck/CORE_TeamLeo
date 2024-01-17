@@ -133,6 +133,7 @@ df3 = descriptives
 - sdf: sd of female participants
 - nf: sample size female
 - study: 1 for study 1, 2 for study 2
+- t: t-value of descriptives
 
 
 ```{r}
@@ -157,5 +158,46 @@ for(i in 1:nrow(df3)){ #apply pool.groups function across all rows of the datase
 pooled_descriptives <- as.data.frame(pooled_descriptives)
 pooled_descriptives$variable <- df3$variable #add the variable name back in
 #write.csv2(pooled_descriptives, "./data/descriptives_pooled.csv")
+```
+
+## Delta Mean and effect sizes for descriptives
+To calculate the Delta Mean and cohens D for the descriptives and T-tests use we did as follows.
+
+Delta : we just subtracted the female mean from the male mean.
+Cohens D: We used the same function as above but adapted it to account for the difference in group size.
+
+We then merge the data back into a dataframe and output it.
+
+```{r}
+df3$delta <- df3$mm -df3$mf
+
+
+# custom Function to calculate Cohen's d and its statistics
+cohen_d_with_stats <- function(mm, mf, sdm, sdf, nm, nf) {
+  pooled_sd <- sqrt(((nm - 1) * sdm^2 + (nf - 1) * sdf^2) / (nm + nf - 2))
+  d <- (mm - mf) / pooled_sd
+  var_d <- (nm + nf) / (nm * nf) + (d^2 / (2 * (nm + nf - 2)))
+  se_d <- sqrt(var_d)
+  ci_95_low <- d - 1.96 * se_d
+  ci_95_high <- d + 1.96 * se_d
+  return(c(d, var_d, se_d, ci_95_low, ci_95_high))
+}
+
+# Apply the function to each row
+results3 <- apply(df3, 1, function(x) cohen_d_with_stats(as.numeric(x['mm']), 
+                                                       as.numeric(x['mf']), 
+                                                       as.numeric(x['sdm']), 
+                                                       as.numeric(x['sdf']), 
+                                                       as.numeric(x['nm']),
+                                                       as.numeric(x['nf'])))
+
+# Converting results to a dataframe
+results_df3 <- as.data.frame(t(results3))
+names(results_df3) <- c("es", "var", "se", "ci.lo", "ci.hi")
+
+# Merging results with the original dataframe
+cohens_d_descriptives <- cbind(df3, results_df3)
+
+#write.csv2(cohens_d_descriptives,"./data/cohens_d_descriptives.csv")
 ```
 
