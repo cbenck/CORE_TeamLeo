@@ -13,6 +13,7 @@ library(pwr) #1.3-0
 library(esc) #0.5.1
 library(readr) #2.1.4
 library(tidyverse) #2.0.0
+library(dmetar) # 0.1.0
 ```
 
 #Load Data
@@ -114,3 +115,47 @@ For the t-tests we found a sample size of n≈711 per group. Therefore we need a
 For the correlations we found a sample size needed of n≈407 participants per group. We therefore need a sample of n=814 for it to be suffiziently powered.
 
 We decided for the sample size of n=1422 as this is those are the more important measures, going with 1422 also allows us to have both measures sufficiently powered for later analysis.
+
+
+
+# descriptives, p413 table 1
+Due to the nature of the following data a full markdown file was not warranted, we will now pool the descriptive data reported on page 413 table 1 of the original publication. As these are reported by gender.
+
+## Load Data
+Data has copied into a csv file. Taken from p413 Table 1 of Kasser & Ryan (1993).
+
+df3 = descriptives
+- variable: name of the variable in question
+- mm: mean of male participants
+- sdm: sd of male participants
+- nm: sample size male
+- mf: mean of female participants
+- sdf: sd of female participants
+- nf: sample size female
+- study: 1 for study 1, 2 for study 2
+
+
+```{r}
+df3 <- read.csv2("./data/descriptives_raw.csv")
+```
+
+## Pooling data
+Using the pool.groups function we aggregate both means and standard deviations correcting for group size.
+
+```{r}
+df3 <- as.data.frame(df3)
+
+for(i in 1:nrow(df3)){ #apply pool.groups function across all rows of the dataset
+    x <- pool.groups(n1=df3$nm[i], n2=df3$nf[i],m1=df3$mm[i],m2=df3$mf[i],sd1=df3$sdm[i],sd2=df3$sdf[i]) 
+  if(i == 1) {
+    pooled_descriptives <- x
+  } else {
+    pooled_descriptives <- rbind(pooled_descriptives, x) # Add new data to dataframe
+  }
+}
+
+pooled_descriptives <- as.data.frame(pooled_descriptives)
+pooled_descriptives$variable <- df3$variable #add the variable name back in
+#write.csv2(pooled_descriptives, "./data/descriptives_pooled.csv")
+```
+
