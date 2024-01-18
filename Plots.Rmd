@@ -256,7 +256,7 @@ table$Variable <- ifelse(is.na(table$header), #add an indentation to variables c
                          paste0("  ", table$Variable))
 
 # Change the value in the Variable column based on multiple conditions
-table$Variable <- ifelse(grepl("SAI_", table$Variable), "Self Accpetnace I",
+table$Variable <- ifelse(grepl("SAI_", table$Variable), "Self Acceptance I",
                   ifelse(grepl("AFI_", table$Variable), "Affiliation I",
                   ifelse(grepl("CFI_", table$Variable), "Community Feeling I",
                   ifelse(grepl("SAC_", table$Variable), "Self Acceptance C",
@@ -471,7 +471,7 @@ table2$Variable <- ifelse(is.na(table2$header), #add an indentation to variables
                          paste0("  ", table2$Variable))
 
 # Change the value in the Variable column based on multiple conditions
-table2$Variable <- ifelse(grepl("SAI_", table2$Variable), "Self Accpetnace I",
+table2$Variable <- ifelse(grepl("SAI_", table2$Variable), "Self Acceptance I",
                   ifelse(grepl("AFI_", table2$Variable), "Affiliation I",
                   ifelse(grepl("CFI_", table2$Variable), "Community Feeling I",
                   ifelse(grepl("SAC_", table2$Variable), "Self Acceptance C",
@@ -512,10 +512,13 @@ forester(left_side_data = table_data,
          display = FALSE,
          xlim = c(-1.5, 1.5),
          estimate_col_name = "D (95% CI)",
-         estimate_precision = 3,
-         stripe_colour = "#d3d3d3",
-         file_path = here::here("plots/Cohens_D_Plots_CR1993.png"))
-#         font_family = "Fira Sans") # Comment this if your using a mac or did not install the alternative font
+         estimate_precision = 2,
+         stripe_colour = "#ffffff",
+         dpi = 1700,
+         ci_sep = "; ",
+         ggplot_width = 50,
+         file_path = here::here("plots/Cohens_D_Plots_CR1993.png"),
+         font_family = "Fira Sans") # Comment this if your using a mac or did not install the alternative font
 ```
 
 ## Forest Plot for correlations
@@ -531,7 +534,11 @@ forester(left_side_data = table_data2,
          display = FALSE,
          xlim = c(-1, 1),
          estimate_col_name = "COR (95% CI)",
-         estimate_precision = 3,
-         stripe_colour = "#d3d3d3",
-         file_path = here::here("plots/Correlations_CI_Plots_CR1993.png"))
+         estimate_precision = 2,
+         stripe_colour = "#ffffff",
+         dpi = 1700,
+         ci_sep = "; ",
+         ggplot_width = 50,
+         file_path = here::here("plots/Correlations_CI_Plots_CR1993.png"),
+         font_family = "Fira Sans")
 ```
