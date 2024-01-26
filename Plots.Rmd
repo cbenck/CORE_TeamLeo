@@ -264,8 +264,8 @@ table$Variable <- ifelse(grepl("SAI_", table$Variable), "Self Acceptance I",
                   ifelse(grepl("SAC_", table$Variable), "Self Acceptance C",
                   ifelse(grepl("AFC_", table$Variable), "Affiliation C",
                   ifelse(grepl("CFC_", table$Variable), "Community Feeling C",
-                  ifelse(grepl("FA", table$Variable), "Family",
-                  ifelse(grepl("WE", table$Variable), "Global Welfare",
+                  ifelse(grepl("FA", table$Variable), "Family (Rank)",
+                  ifelse(grepl("WE", table$Variable), "Global Welfare (Rank)",
                     table$Variable))))))))
 
 table$Variable <- ifelse(is.na(table$study), #add two indentation in each row containing a Study ID
@@ -477,8 +477,8 @@ table2$Variable <- ifelse(grepl("SAI_", table2$Variable), "Self Accpetnace I",
                   ifelse(grepl("SAC_", table2$Variable), "Self Acceptance C",
                   ifelse(grepl("AFC_", table2$Variable), "Affiliation C",
                   ifelse(grepl("CFC_", table2$Variable), "Community Feeling C",
-                  ifelse(grepl("FA", table2$Variable), "Family",
-                  ifelse(grepl("WE", table2$Variable), "Global Welfare",
+                  ifelse(grepl("FA", table2$Variable), "Family (Rank)",
+                  ifelse(grepl("WE", table2$Variable), "Global Welfare (Rank)",
                     table2$Variable))))))))
 
 table2$Variable <- ifelse(is.na(table2$study), #add two indentation in each row containing a Study ID
@@ -510,7 +510,7 @@ correlations_CI$variable <- table3$variable
 correlations_CI$study <- table3$study
 correlations_CI$n <- table3$n
 
-#write.csv2(correlations_CI, "./data/correlations_CI.csv")
+write.csv2(correlations_CI, "./data/correlations_CI.csv")
 ```
 
 ##Load prepared correlation data
@@ -684,27 +684,16 @@ table3$Variable <- ifelse(is.na(table3$header), #add an indentation to variables
                          paste0("  ", table3$Variable))
 
 # Change the value in the Variable column based on multiple conditions
-<<<<<<< HEAD
-table3$Variable <- ifelse(grepl("SAI_", table3$Variable), "Self Accpetnace I",
+table3$Variable <- ifelse(grepl("SAI_", table3$Variable), "Self Accpetance I",
                   ifelse(grepl("AFI_", table3$Variable), "Affiliation I",
+                  ifelse(grepl("MONEY_", table3$Variable), "Money (Rank)",
                   ifelse(grepl("CFI_", table3$Variable), "Community Feeling I",
                   ifelse(grepl("SAC_", table3$Variable), "Self Acceptance C",
                   ifelse(grepl("AFC_", table3$Variable), "Affiliation C",
                   ifelse(grepl("CFC_", table3$Variable), "Community Feeling C",
                   ifelse(grepl("FSI_", table3$Variable), "Financial Success I",
                   ifelse(grepl("FSC_", table3$Variable), "Financial Success C",
-                    table3$Variable))))))))
-=======
-table2$Variable <- ifelse(grepl("SAI_", table2$Variable), "Self Acceptance I",
-                  ifelse(grepl("AFI_", table2$Variable), "Affiliation I",
-                  ifelse(grepl("CFI_", table2$Variable), "Community Feeling I",
-                  ifelse(grepl("SAC_", table2$Variable), "Self Acceptance C",
-                  ifelse(grepl("AFC_", table2$Variable), "Affiliation C",
-                  ifelse(grepl("CFC_", table2$Variable), "Community Feeling C",
-                  ifelse(grepl("FSI_", table2$Variable), "Financial Success I",
-                  ifelse(grepl("FSC_", table2$Variable), "Financial Success C",
-                    table2$Variable))))))))
->>>>>>> a549c019a56c761014352bcbc6b43a97ea169953
+                    table3$Variable)))))))))
 
 table3$Variable <- ifelse(is.na(table3$study), #add two indentation in each row containing a Study ID
                          table3$Variable,
@@ -909,15 +898,16 @@ table4$Variable <- ifelse(is.na(table4$header), #add an indentation to variables
                          paste0("  ", table4$Variable))
 
 # Change the value in the Variable column based on multiple conditions
-table4$Variable <- ifelse(grepl("SAI_", table4$Variable), "Self Accpetnace I",
+table4$Variable <- ifelse(grepl("SAI_", table4$Variable), "Self Accpetance I",
                   ifelse(grepl("AFI_", table4$Variable), "Affiliation I",
+                  ifelse(grepl("MONEY_", table4$Variable), "Money (Rank)",
                   ifelse(grepl("CFI_", table4$Variable), "Community Feeling I",
                   ifelse(grepl("SAC_", table4$Variable), "Self Acceptance C",
                   ifelse(grepl("AFC_", table4$Variable), "Affiliation C",
                   ifelse(grepl("CFC_", table4$Variable), "Community Feeling C",
                   ifelse(grepl("FSI_", table4$Variable), "Financial Success I",
                   ifelse(grepl("FSC_", table4$Variable), "Financial Success C",
-                    table4$Variable))))))))
+                    table4$Variable)))))))))
 
 table4$Variable <- ifelse(is.na(table4$study), #add two indentation in each row containing a Study ID
                          table4$Variable,
@@ -958,11 +948,11 @@ forester(left_side_data = table_data,
          estimate_col_name = "D (95% CI)",
          estimate_precision = 2,
          stripe_colour = "#ffffff",
-         dpi = 1700,
+         dpi = 1500,
          ci_sep = "; ",
          ggplot_width = 50,
-         file_path = here::here("plots/Cohens_D_Plots_CR1993.png"),
-         font_family = "Fira Sans") # Comment this if your using a mac or did not install the alternative font
+         #font_family = "Fira Sans", #commented for mac users, uncomment on windows
+         file_path = here::here("plots/Cohens_D_Plots_CR1993.png"))
 ```
 
 ## Forest Plot for Cohens_D - Our findings
@@ -980,12 +970,11 @@ forester(left_side_data = table_data2,
           estimate_col_name = "D (95% CI)",
          estimate_precision = 2,
          stripe_colour = "#ffffff",
-         dpi = 1700,
+         dpi = 1500,
          ci_sep = "; ",
          ggplot_width = 50,
-          font_family = "Fira Sans",
+          #font_family = "Fira Sans", #commented for mac users, uncomment on windows
          file_path = here::here("plots/Cohens_D_Plots_CR1993_TESTFORPLOT.png"))
-#         font_family = "Fira Sans") # Comment this if your using a mac or did not install the alternative font
 ```
 
 ## Forest Plot for correlations - original data
@@ -1003,11 +992,11 @@ forester(left_side_data = table_data3,
          estimate_col_name = "COR (95% CI)",
          estimate_precision = 2,
          stripe_colour = "#ffffff",
-         dpi = 1700,
+         dpi = 1500,
          ci_sep = "; ",
          ggplot_width = 50,
-         file_path = here::here("plots/Correlations_CI_Plots_CR1993.png"),
-         font_family = "Fira Sans")
+          #font_family = "Fira Sans", #commented for mac users, uncomment on windows
+         file_path = here::here("plots/Correlations_CI_Plots_CR1993.png"))
 ```
 
 ## Forest Plot for correlations - our data
@@ -1025,9 +1014,9 @@ forester(left_side_data = table_data4,
          estimate_col_name = "COR (95% CI)",
          estimate_precision = 2,
          stripe_colour = "#ffffff",
-         dpi = 1700,
+         dpi = 1500,
          ci_sep = "; ",
          ggplot_width = 50,
-         font_family = "Fira Sans",
+          #font_family = "Fira Sans", #commented for mac users, uncomment on windows
          file_path = here::here("plots/Correlations_CI_Plots_CR1993_TESTFORPLOT.png"))
 ```

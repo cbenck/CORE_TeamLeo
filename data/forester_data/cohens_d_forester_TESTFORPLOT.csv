@@ -7,8 +7,8 @@
 "5";"       Self Acceptance C";1;0;0,0625;0,25;-0,25;0,25;NA
 "6";"       Affiliation C";1;0;0,0625;0,25;-0,25;0,25;NA
 "7";"       Community Feeling C";1;0;0,0625;0,25;-0,25;0,25;NA
-"8";"       Family";1;0;0,0625;0,25;-0,25;0,25;NA
-"9";"       Global Welfare";1;0;0,0625;0,25;-0,25;0,25;NA
+"8";"       Family (Rank)";1;0;0,0625;0,25;-0,25;0,25;NA
+"9";"       Global Welfare (Rank)";1;0;0,0625;0,25;-0,25;0,25;NA
 "18";"  Study 2";NA;NA;NA;NA;NA;NA;1
 "10";"       Self Accpetnace I";2;0;0,0625;0,25;-0,25;0,25;NA
 "11";"       Affiliation I";2;0;0,0625;0,25;-0,25;0,25;NA
@@ -16,8 +16,8 @@
 "13";"       Self Acceptance C";2;0;0,0625;0,25;-0,25;0,25;NA
 "14";"       Affiliation C";2;0;0,0625;0,25;-0,25;0,25;NA
 "15";"       Community Feeling C";2;0;0,0625;0,25;-0,25;0,25;NA
-"16";"       Family";2;0;0,0625;0,25;-0,25;0,25;NA
-"17";"       Global Welfare";2;0;0,0625;0,25;-0,25;0,25;NA
+"16";"       Family (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
+"17";"       Global Welfare (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
 "110";"Vitality";NA;NA;NA;NA;NA;NA;NA
 "210";"  Study 1";NA;NA;NA;NA;NA;NA;1
 "171";"       Self Accpetnace I";1;0;0,0625;0,25;-0,25;0,25;NA
@@ -26,8 +26,8 @@
 "20";"       Self Acceptance C";1;0;0,0625;0,25;-0,25;0,25;NA
 "211";"       Affiliation C";1;0;0,0625;0,25;-0,25;0,25;NA
 "22";"       Community Feeling C";1;0;0,0625;0,25;-0,25;0,25;NA
-"23";"       Family";1;0;0,0625;0,25;-0,25;0,25;NA
-"24";"       Global Welfare";1;0;0,0625;0,25;-0,25;0,25;NA
+"23";"       Family (Rank)";1;0;0,0625;0,25;-0,25;0,25;NA
+"24";"       Global Welfare (Rank)";1;0;0,0625;0,25;-0,25;0,25;NA
 "111";"  Study 2";NA;NA;NA;NA;NA;NA;1
 "25";"       Self Accpetnace I";2;0;0,0625;0,25;-0,25;0,25;NA
 "26";"       Affiliation I";2;0;0,0625;0,25;-0,25;0,25;NA
@@ -35,8 +35,8 @@
 "28";"       Self Acceptance C";2;0;0,0625;0,25;-0,25;0,25;NA
 "29";"       Affiliation C";2;0;0,0625;0,25;-0,25;0,25;NA
 "30";"       Community Feeling C";2;0;0,0625;0,25;-0,25;0,25;NA
-"31";"       Family";2;0;0,0625;0,25;-0,25;0,25;NA
-"32";"       Global Welfare";2;0;0,0625;0,25;-0,25;0,25;NA
+"31";"       Family (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
+"32";"       Global Welfare (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
 "112";"Control Orientation";NA;NA;NA;NA;NA;NA;NA
 "212";"  Study 1";NA;NA;NA;NA;NA;NA;1
 "33";"       Self Accpetnace I";1;0;0,0625;0,25;-0,25;0,25;NA
@@ -45,8 +45,8 @@
 "36";"       Self Acceptance C";1;0;0,0625;0,25;-0,25;0,25;NA
 "37";"       Affiliation C";1;0;0,0625;0,25;-0,25;0,25;NA
 "38";"       Community Feeling C";1;0;0,0625;0,25;-0,25;0,25;NA
-"39";"       Family";1;0;0,0625;0,25;-0,25;0,25;NA
-"40";"       Global Welfare";1;0;0,0625;0,25;-0,25;0,25;NA
+"39";"       Family (Rank)";1;0;0,0625;0,25;-0,25;0,25;NA
+"40";"       Global Welfare (Rank)";1;0;0,0625;0,25;-0,25;0,25;NA
 "113";"Depression";NA;NA;NA;NA;NA;NA;NA
 "213";"  Study 2";NA;NA;NA;NA;NA;NA;1
 "41";"       Self Accpetnace I";2;0;0,0625;0,25;-0,25;0,25;NA
@@ -55,8 +55,8 @@
 "44";"       Self Acceptance C";2;0;0,0625;0,25;-0,25;0,25;NA
 "45";"       Affiliation C";2;0;0,0625;0,25;-0,25;0,25;NA
 "46";"       Community Feeling C";2;0;0,0625;0,25;-0,25;0,25;NA
-"47";"       Family";2;0;0,0625;0,25;-0,25;0,25;NA
-"48";"       Global Welfare";2;0;0,0625;0,25;-0,25;0,25;NA
+"47";"       Family (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
+"48";"       Global Welfare (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
 "114";"Anxiety";NA;NA;NA;NA;NA;NA;NA
 "214";"  Study 2";NA;NA;NA;NA;NA;NA;1
 "49";"       Self Accpetnace I";2;0;0,0625;0,25;-0,25;0,25;NA
@@ -65,5 +65,5 @@
 "52";"       Self Acceptance C";2;0;0,0625;0,25;-0,25;0,25;NA
 "53";"       Affiliation C";2;0;0,0625;0,25;-0,25;0,25;NA
 "54";"       Community Feeling C";2;0;0,0625;0,25;-0,25;0,25;NA
-"55";"       Family";2;0;0,0625;0,25;-0,25;0,25;NA
-"56";"       Global Welfare";2;0;0,0625;0,25;-0,25;0,25;NA
+"55";"       Family (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
+"56";"       Global Welfare (Rank)";2;0;0,0625;0,25;-0,25;0,25;NA
