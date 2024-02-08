@@ -2,7 +2,10 @@
 title: "Kasser_Ryan_1993"
 author: "Leopold Roth"
 date: "2023-11-24"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
 ---
 
 # Packages
@@ -21,6 +24,7 @@ library(broom) # 1.0.5
 
 # Load Data
 ```{r}
+#this chunk loads the dataset, strores it in the object 'df' and reassures that it is a dataframe
 df <- read_sav("data/[PCIRR] Kasser and Ryan (1993) replication CR_1993 [Team Leo]_NOCHECKS_December 14, 2023_07.52.sav")
 df <- as.data.frame(df)
 #N initial:
@@ -29,12 +33,14 @@ df <- as.data.frame(df)
 # Check data
 ## exclude incomplete cases
 ```{r}
+#this subsets the data to only keep cases who completed the entire survey
 df<-subset(df, as.numeric(Progress) == 100)
 #N complete:
 ```
 
 ## exclude by conduction time (3SD faster than average)
 ```{r}
+#this serves the purpose to exclude cases in which people/bots clicked through everything as fast as possible
 df$Duration__in_seconds_<-as.numeric(df$Duration__in_seconds_)
 sd_duration<-(sd(df$Duration__in_seconds_)*3) #compute 3 times SD of duration
 mean_duration<-mean(df$Duration__in_seconds_) #compute mean duration
@@ -45,6 +51,7 @@ df<-subset(df,df$Duration__in_seconds_>=cut_duration) #filter out cases with sho
 
 ## exclude by missed attention checks (3 attention checks) (deactivated in simulation)
 ```{r}
+#the survey included 3 attention checks; incorrectly responding to one of these will lead to exclusion from the final dataset
 #df<-subset(df, AT_1 == 5)
 #df<-subset(df, AT_2 == 1)
 #df<-subset(df, AT_3 == 3)
@@ -55,16 +62,19 @@ df<-subset(df,df$Duration__in_seconds_>=cut_duration) #filter out cases with sho
 # Clean data
 ## exclude columns of attention checks
 ```{r}
+#after the exclusion, we exclude the attention check columns from the dataset
 df <- df %>% select(-c("AT_1", "AT_2", "AT_3"))
-
 ```
 
 ## TODOexclude non-needed columns
 ```{r}
-
+#this will be updated, in case qualtrics attaches columns, which are not needed for the analysis
 ```
 ## recode variables
 ```{r}
+#this chunk recodes variables which were reverse coded. These were marked with _R in the variable name
+#as the different scales operate on different scale widths, we need to select the reversed items by scale, using the starting letters or the variables (e.g., SA for the self-actualization items)
+#the code then 'takes' all variables, starting with 'SA' and ending with '_R' and recodes them, based on the specific scale (1 to 4 or 1 to 7 etc.)
 #self-actualization
 df <- df %>%
   mutate(across(grep("^SA_.*_R$", names(df), value = TRUE), ~case_when(
@@ -112,6 +122,9 @@ df <- df %>%
 
 ## rename variables (remove _R from recode variables)
 ```{r}
+#after recoding the variables (see chunk above), the marking of the reversed variables is no longer needed
+#hence, the '_R' is removed from the variables names
+
 #self-actualization
 names(df) <- ifelse(grepl("^SA_", names(df)), gsub("_R$", "", names(df)), names(df))
 #vitality
@@ -124,9 +137,12 @@ names(df) <- ifelse(grepl("^AN_", names(df)), gsub("_R$", "", names(df)), names(
 
 ```
 
-#Descriptives
+# Descriptives
 ## compute reliabilities
 ```{r}
+#this chunk computes the reliabilities (cronbachs alpha) for all measures of interest in the study. By keeping the [[1]] in every line, only the alpha is reported
+#to get more details on the item level, delete the [[1]]
+
 ###independent variables
 #Aspiration index: importance
 psych::alpha(df%>% select(starts_with("ASP_SAI")))[[1]]
@@ -167,15 +183,42 @@ psych::alpha(df%>% select(starts_with("AN_")))[[1]]
 
 ## demographics
 ```{r}
-#describe age:
+###describe age:
 psych::describe(df$age)
+ggplot(df,aes(y = age))+
+  geom_boxplot()+
+  theme_classic()
 
-#describe best identified gender:
+###describe best identified gender:
 table(df$gender) #1 = male, 2 = female, 3 = other, 4 = rather not disclose
+
+
+# Calculate the table and convert it to a data frame
+gender_table <- table(df$gender)
+gender_df <- data.frame(Category = names(gender_table), Count = as.integer(gender_table))
+
+# Add a column for percentages
+gender_df$Percentage <- (gender_df$Count / sum(gender_df$Count)) * 100
+
+# Update Category names to be more descriptive
+gender_df$Category <- factor(gender_df$Category, levels = c("1", "2", "3", "4"),
+                             labels = c("Male", "Female", "Other", "Rather not disclose"))
+
+# Plot
+ggplot(gender_df, aes(x = Category, y = Percentage, fill = Category)) +
+  geom_bar(stat = "identity") +
+  scale_fill_brewer(palette = "Pastel1") + 
+  labs(title = "Gender Distribution", x = "Gender", y = "Percentage (%)") +
+  theme_classic() +
+  geom_text(aes(label = sprintf("%.1f%%", Percentage)), vjust = -0.5)
+
 ```
 
 ## compute means
 ```{r}
+#this chunk computes all needed means for the analysis
+#first all independent variables, afterwards the dependent variables
+
 ###independent variables
 #aspiration index: importances
 df <- df %>% mutate(mean_asp_sai = rowMeans(select(., starts_with("ASP_SAI")), na.rm = TRUE))
@@ -249,9 +292,10 @@ df <- df %>% mutate(mean_trait_anxiety =
 
 ## describe distribution of means
 ```{r}
+#here we receive all relevant descriptive informations about the distribution properties of the means
 #numerically describe all means
 df_means <- df %>% select (starts_with("mean"))
-df_means_describe <- psych::describe(df_means) #save descriptives in extra df
+df_means_describe <- psych::describe(df_means) #save descriptives in extra df: this contains detailed informations about all means (e.g., case number, Sd etc.)
 
 #plot all means
 long_df_means <- pivot_longer(df_means, cols = everything(), names_to = "variable", values_to = "value")
@@ -260,7 +304,7 @@ ggplot(long_df_means, aes(x = value)) +
   geom_histogram(bins = 30, fill = "blue", color = "black") +
   facet_wrap(~ variable, scales = "free_x") +
   theme_minimal() +
-  labs(title = "Histograms of All Columns", x = "Value", y = "Frequency")
+  labs(title = "Histograms of All Means", x = "Value", y = "Frequency")
 
 ```
 
