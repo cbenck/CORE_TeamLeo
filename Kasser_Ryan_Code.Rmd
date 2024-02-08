@@ -310,13 +310,25 @@ ggplot(long_df_means, aes(x = value)) +
 
 ## intercorrelations of means
 ```{r}
+#here we create a correlation table between all means
 df_means %>%
-  correlation::correlation()
+  correlation::correlation(p_adjust = "none")%>% #this disables any alpha corrections, but can be replace with other methods (https://rdrr.io/github/easystats/correlation/man/correlation.html)
+  summary(redundant = TRUE) %>%
+  plot()
+
+df_means %>%
+  correlation::correlation(p_adjust = "none")%>%
+  filter(p < .05) #this is a subset with significant correlations at .05
+
+df_means %>%
+  correlation::correlation(p_adjust = "none")%>%
+  filter(p < .001) #this is a subset with significant correlations at .001
+  
 ```
 
 # Analysis Kasser & Ryan (1993)
 ## Preliminary analysis
-### MANOVA by gender with follow up t-tests
+### MANOVA by gender with follow up t-tests & inter-corelations of importances and chances
 ```{r}
 #exclude individuals which didn't indicate to identify as female/male
 df_manova <- subset(df, gender < 3) 
@@ -345,12 +357,32 @@ report::report(t.test(mean_asp_afc ~gender, data = df_manova))
 report::report(t.test(mean_asp_cfc ~gender, data = df_manova))
 report::report(t.test(mean_asp_fsc ~gender, data = df_manova))
 
-#intercorrelate all importance (put in one)
+#these correlations have been computed above with the other means already
+#this section was create to give a more focal perspective on these correlations
+#intercorrelate all importances
+df_importance <- df_means %>% select(ends_with("i"))
+
+df_importance %>%
+  correlation::correlation(p_adjust = "none") %>%
+  summary(redundant = TRUE) %>%
+  plot()
+  
 #intercorrelate all chances
+df_chance <- df_means %>% select(ends_with("c"))
+
+df_chance %>%
+  correlation::correlation(p_adjust = "none") %>%
+  summary(redundant = TRUE) %>%
+  plot()
 ```
 
 ### outcome by gender and aspiration interactions
 ```{r}
+#this chunk runs all 40 proposed interction models by gender and aspirations
+#the results are stored in 'df_results_gender_interactions'
+#the significant ones are filtered and stored in a second dataframe called 'df_results_gender_interactions_sign'
+
+
 extract_full_name <- function(string) {
     parts <- unlist(strsplit(string, "_"))
     # Assuming the dependent variable name is the first three parts of the split
@@ -410,20 +442,7 @@ filtered_df$model <- sapply(filtered_df$model, extract_full_name)
 df_results_gender_interactions <- filtered_df
 
 #find significant interactions
-df_results_gender_interactions <- subset(df_results_gender_interactions, p.value < .05)
-```
-
-### intercorrelations importances and chances
-```{r}
-#importances
-df %>%
-  select(c(mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi)) %>%
-  correlation::correlation()
-
-#chances
-df %>%
-  select(c(mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc)) %>%
-  correlation::correlation()
+df_results_gender_interactions_sign <- subset(df_results_gender_interactions, p.value < .05)
 ```
 
 ## Primary analysis
