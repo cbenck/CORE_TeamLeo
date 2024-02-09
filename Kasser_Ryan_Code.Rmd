@@ -5,7 +5,7 @@ date: "2023-11-24"
 output: 
   html_document:
     toc: true
-    toc_depth: 3
+    toc_depth: 4
 ---
 
 # Packages
@@ -446,7 +446,39 @@ df_results_gender_interactions_sign <- subset(df_results_gender_interactions, p.
 ```
 
 ## Primary analysis
-### regressions and correlations
+
+### define function to extract regression results
+
+```{r}
+extractModelStatistics <- function(model) {
+  # Extract coefficients
+  standardized_betas <- coef(model)
+  
+  # Extract confidence intervals
+  standardized_cis <- confint(model, level = 0.95)
+  standardized_cis <- setNames(as.data.frame(standardized_cis), c("Lower", "Upper"))
+  rownames(standardized_cis) <- names(standardized_betas)
+  
+  # Extract p-values
+  summary_model <- summary(model)
+  p_values <- summary_model$coefficients[, "Pr(>|t|)"]
+  
+  # Create a data frame for coefficients and their names
+  results <- data.frame(Estimate = standardized_betas, row.names = names(standardized_betas))
+  
+  # Add confidence intervals and p-values by matching row names
+  results$Lower <- standardized_cis[rownames(results), "Lower"]
+  results$Upper <- standardized_cis[rownames(results), "Upper"]
+  results$P_Value <- p_values[rownames(results)]
+  
+  # Optionally drop rows with NA
+  results <- na.omit(results)
+  
+  return(results)
+}
+```
+
+### preparation for analysis
 ```{r}
 #create standardized dataframe with means
 df_means_scaled <- as.data.frame(scale(df_means))
@@ -454,195 +486,377 @@ df_means_scaled <- as.data.frame(scale(df_means))
 #create names list which will be assigned often
 names_corr <- c("DV", "IV", "r", "ci_low", "ci_high", "p")
 names_regr <- c("beta", "ci_low", "ci_high", "p")
+```
 
+
+### regressions and correlations (DV by aspiration importance)
+```{r}
 #self-actualization - importance
-df_SA <- df_means_scaled %>% select(c(mean_self_actualization, #create specific df for analysis
+df_SA_I <- df_means_scaled %>% select(c(mean_self_actualization, #create specific df for analysis
                                       mean_asp_overall_importance,
                                       mean_asp_sai,
                                       mean_asp_afi,
                                       mean_asp_fsi,
                                       mean_asp_cfi))
 
-m1 <- lm(mean_self_actualization ~.,data = df_SA) #compute model
+m1 <- lm(mean_self_actualization ~.,data = df_SA_I) #compute model
 
-standardized_betas <- coef(m1) # Extract coefficients
-
-standardized_cis <- confint(m1, level = 0.95) # Extract confidence intervals
-
-# This step adjusts the CI matrix to have row names matching those of the coefficients
-standardized_cis <- setNames(as.data.frame(standardized_cis), c("Lower", "Upper"))
-rownames(standardized_cis) <- names(standardized_betas)
-
-summary_m1 <- summary(m1) # Extract p-values
-p_values <- summary_m1$coefficients[, "Pr(>|t|)"]
-
-results <- data.frame(Estimate = standardized_betas, row.names = names(standardized_betas)) # Create a data frame for coefficients and their names
-
-# Add confidence intervals and p-values by matching row names
-results$Lower <- standardized_cis[rownames(results), "Lower"]
-results$Upper <- standardized_cis[rownames(results), "Upper"]
-results$P_Value <- p_values[rownames(results)]
-
-# Check for any misalignment and adjust
-results <- na.omit(results)  # This means that lines without estimates/p-values are dropped (this is probably only important for the simulated data)
-
-# Ensure all components are aligned properly
-results_SA <- results
-
-names(results_SA) <- names_regr #rename dataframe with extracted results
+results_SA_I <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_SA_I) <- names_regr #rename dataframe with extracted results
+results_SA_I$DV <- rep("SA",nrow(results_SA_I))
 
 #get correlations
 
-correlation_SA <- df_SA %>%
+correlation_SA_I <- df_SA_I %>%
   correlation::correlation(p_adjust = "none")
 
-correlation_SA  <- correlation_SA [1:5,]
-correlation_SA <- as.data.frame(cbind(correlation_SA$Parameter1,
-                                      correlation_SA$Parameter2,
-                                      round(correlation_SA$r,3),
-                                      round(correlation_SA$CI_low,3),
-                                      round(correlation_SA$CI_high,3),
-                                      round(correlation_SA$p,3)))
+correlation_SA_I  <- correlation_SA_I [1:5,]
+correlation_SA_I <- as.data.frame(cbind(correlation_SA_I$Parameter1,
+                                      correlation_SA_I$Parameter2,
+                                      round(correlation_SA_I$r,3),
+                                      round(correlation_SA_I$CI_low,3),
+                                      round(correlation_SA_I$CI_high,3),
+                                      round(correlation_SA_I$p,3)))
 
-names(correlation_SA) <- names_corr
-
-
-
-
-
-
-
-
-
-
+names(correlation_SA_I) <- names_corr
 
 
 #vitality - importance
-m1 <- lm(mean_vitality ~ mean_asp_overall_importance, data = df)
-m2 <- lm(mean_vitality ~ mean_asp_overall_importance+
-            mean_asp_sai+
-            mean_asp_afi+
-            mean_asp_fsi+
-            mean_asp_cfi, data = df)
+df_VI_I <- df_means_scaled %>% select(c(mean_vitality, #create specific df for analysis
+                                      mean_asp_overall_importance,
+                                      mean_asp_sai,
+                                      mean_asp_afi,
+                                      mean_asp_fsi,
+                                      mean_asp_cfi))
 
-tab_model(m1,m2)
+m1 <- lm(mean_vitality ~.,data = df_VI_I) #compute model
 
-df %>%
-  select(c(mean_vitality,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
-  correlation::correlation()
+results_VI_I <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_VI_I) <- names_regr #rename dataframe with extracted results
+results_VI_I$DV <- rep("VI",nrow(results_VI_I))
 
-#control orientation
-m1 <- lm(mean_control_orientation ~ mean_asp_overall_importance, data = df)
-m2 <- lm(mean_control_orientation ~ mean_asp_overall_importance+
-            mean_asp_sai+
-            mean_asp_afi+
-            mean_asp_fsi+
-            mean_asp_cfi, data = df)
+#get correlations
 
-tab_model(m1,m2)
+correlation_VI_I <- df_VI_I %>%
+  correlation::correlation(p_adjust = "none")
 
-df %>%
-  select(c(mean_control_orientation,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
-  correlation::correlation()
+correlation_VI_I  <- correlation_VI_I [1:5,]
+correlation_VI_I <- as.data.frame(cbind(correlation_VI_I$Parameter1,
+                                      correlation_VI_I$Parameter2,
+                                      round(correlation_VI_I$r,3),
+                                      round(correlation_VI_I$CI_low,3),
+                                      round(correlation_VI_I$CI_high,3),
+                                      round(correlation_VI_I$p,3)))
 
-#depressive symptoms
-m1 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance, data = df)
-m2 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance+
-            mean_asp_sai+
-            mean_asp_afi+
-            mean_asp_fsi+
-            mean_asp_cfi, data = df)
+names(correlation_VI_I) <- names_corr
 
-tab_model(m1,m2)
+#control orientation - importance
+df_CO_I <- df_means_scaled %>% select(c(mean_control_orientation, #create specific df for analysis
+                                      mean_asp_overall_importance,
+                                      mean_asp_sai,
+                                      mean_asp_afi,
+                                      mean_asp_fsi,
+                                      mean_asp_cfi))
 
-df %>%
-  select(c(mean_depressive_symptoms,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
-  correlation::correlation()
+m1 <- lm(mean_control_orientation ~.,data = df_CO_I) #compute model
 
-#trait anxiety
-m1 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance, data = df)
-m2 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance+
-            mean_asp_sai+
-            mean_asp_afi+
-            mean_asp_fsi+
-            mean_asp_cfi, data = df)
+results_CO_I <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_CO_I) <- names_regr #rename dataframe with extracted results
+results_CO_I$DV <- rep("CO",nrow(results_CO_I))
 
-tab_model(m1,m2)
+#get correlations
+correlation_CO_I <- df_CO_I %>%
+  correlation::correlation(p_adjust = "none")
 
-df %>%
-  select(c(mean_trait_anxiety,mean_asp_sai,mean_asp_afi,mean_asp_fsi,mean_asp_cfi))%>%
-  correlation::correlation()
+correlation_CO_I  <- correlation_CO_I [1:5,]
+correlation_CO_I <- as.data.frame(cbind(correlation_CO_I$Parameter1,
+                                      correlation_CO_I$Parameter2,
+                                      round(correlation_CO_I$r,3),
+                                      round(correlation_CO_I$CI_low,3),
+                                      round(correlation_CO_I$CI_high,3),
+                                      round(correlation_CO_I$p,3)))
 
+names(correlation_CO_I) <- names_corr
+
+#depressive symptoms - importance
+df_DS_I <- df_means_scaled %>% select(c(mean_depressive_symptoms, #create specific df for analysis
+                                      mean_asp_overall_importance,
+                                      mean_asp_sai,
+                                      mean_asp_afi,
+                                      mean_asp_fsi,
+                                      mean_asp_cfi))
+
+m1 <- lm(mean_depressive_symptoms ~.,data = df_DS_I) #compute model
+
+results_DS_I <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_DS_I) <- names_regr #rename dataframe with extracted results
+results_DS_I$DV <- rep("DS",nrow(results_DS_I))
+
+#get correlations
+correlation_DS_I <- df_DS_I %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_DS_I  <- correlation_DS_I [1:5,]
+correlation_DS_I <- as.data.frame(cbind(correlation_DS_I$Parameter1,
+                                      correlation_DS_I$Parameter2,
+                                      round(correlation_DS_I$r,3),
+                                      round(correlation_DS_I$CI_low,3),
+                                      round(correlation_DS_I$CI_high,3),
+                                      round(correlation_DS_I$p,3)))
+
+names(correlation_DS_I) <- names_corr
+
+#trait anxiety - importance
+df_TA_I <- df_means_scaled %>% select(c(mean_trait_anxiety, #create specific df for analysis
+                                      mean_asp_overall_importance,
+                                      mean_asp_sai,
+                                      mean_asp_afi,
+                                      mean_asp_fsi,
+                                      mean_asp_cfi))
+
+m1 <- lm(mean_trait_anxiety ~.,data = df_TA_I) #compute model
+
+results_TA_I <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_TA_I) <- names_regr #rename dataframe with extracted results
+results_TA_I$DV <- rep("TA",nrow(results_TA_I))
+
+#get correlations
+correlation_TA_I <- df_TA_I %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_TA_I  <- correlation_TA_I [1:5,]
+correlation_TA_I <- as.data.frame(cbind(correlation_TA_I$Parameter1,
+                                      correlation_TA_I$Parameter2,
+                                      round(correlation_TA_I$r,3),
+                                      round(correlation_TA_I$CI_low,3),
+                                      round(correlation_TA_I$CI_high,3),
+                                      round(correlation_TA_I$p,3)))
+
+names(correlation_TA_I) <- names_corr
+```
+
+#### get results in dataframes, to preocess later in forestplot (importance)
+```{r}
+#regression results
+results_regr_asp_importance <- rbind(results_SA_I,
+                                     results_VI_I,
+                                     results_CO_I,
+                                     results_DS_I,
+                                     results_TA_I)
+
+#correlation results
+results_corr_asp_importance <-rbind(correlation_SA_I,
+                                    correlation_VI_I,
+                                    correlation_CO_I,
+                                    correlation_DS_I,
+                                    correlation_TA_I)
+
+
+#remove dataframes which aren't needed anymore
+rm(list=c("results_SA_I", "results_VI_I", "results_CO_I", "results_DS_I", "results_TA_I","df_SA_I","df_VI_I","df_CO_I","df_DS_I","df_TA_I",
+          "correlation_SA_I","correlation_VI_I","correlation_CO_I","correlation_DS_I","correlation_TA_I"))
+```
+
+### regressions and correlations (DV by aspiration chances)
+```{r}
 #self-actualization - chances
-m1 <- lm(mean_self_actualization ~ mean_asp_overall_chances, data = df)
-m2 <- lm(mean_self_actualization ~ mean_asp_overall_chances+
-            mean_asp_sac+
-            mean_asp_afc+
-            mean_asp_fsc+
-            mean_asp_cfc, data = df)
+df_SA_C <- df_means_scaled %>% select(c(mean_self_actualization, #create specific df for analysis
+                                      mean_asp_overall_chances,
+                                      mean_asp_sac,
+                                      mean_asp_afc,
+                                      mean_asp_fsc,
+                                      mean_asp_cfc))
 
-tab_model(m1,m2)
+m1 <- lm(mean_self_actualization ~.,data = df_SA_C) #compute model
 
-df %>%
-  select(c(mean_self_actualization,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
-  correlation::correlation()
+results_SA_C <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_SA_C) <- names_regr #rename dataframe with extracted results
+results_SA_C$DV <- rep("SA",nrow(results_SA_C))
+
+#get correlations
+
+correlation_SA_C <- df_SA_C %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_SA_C  <- correlation_SA_C [1:5,]
+correlation_SA_C <- as.data.frame(cbind(correlation_SA_C$Parameter1,
+                                      correlation_SA_C$Parameter2,
+                                      round(correlation_SA_C$r,3),
+                                      round(correlation_SA_C$CI_low,3),
+                                      round(correlation_SA_C$CI_high,3),
+                                      round(correlation_SA_C$p,3)))
+
+names(correlation_SA_C) <- names_corr
+
 
 #vitality - chances
-m1 <- lm(mean_vitality ~ mean_asp_overall_chances, data = df)
-m2 <- lm(mean_vitality ~ mean_asp_overall_chances+
-            mean_asp_sac+
-            mean_asp_afc+
-            mean_asp_fsc+
-            mean_asp_cfc, data = df)
+df_VI_C <- df_means_scaled %>% select(c(mean_vitality, #create specific df for analysis
+                                      mean_asp_overall_chances,
+                                      mean_asp_sac,
+                                      mean_asp_afc,
+                                      mean_asp_fsc,
+                                      mean_asp_cfc))
 
-tab_model(m1,m2)
+m1 <- lm(mean_vitality ~.,data = df_VI_C) #compute model
 
-df %>%
-  select(c(mean_vitality,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
-  correlation::correlation()
+results_VI_C <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_VI_C) <- names_regr #rename dataframe with extracted results
+results_VI_C$DV <- rep("VI",nrow(results_VI_C))
+
+#get correlations
+
+correlation_VI_C <- df_VI_C %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_VI_C  <- correlation_VI_C [1:5,]
+correlation_VI_C <- as.data.frame(cbind(correlation_VI_C$Parameter1,
+                                      correlation_VI_C$Parameter2,
+                                      round(correlation_VI_C$r,3),
+                                      round(correlation_VI_C$CI_low,3),
+                                      round(correlation_VI_C$CI_high,3),
+                                      round(correlation_VI_C$p,3)))
+
+names(correlation_VI_C) <- names_corr
 
 #control orientation - chances
-m1 <- lm(mean_control_orientation ~ mean_asp_overall_chances, data = df)
-m2 <- lm(mean_control_orientation ~ mean_asp_overall_chances+
-            mean_asp_sac+
-            mean_asp_afc+
-            mean_asp_fsc+
-            mean_asp_cfc, data = df)
+df_CO_C <- df_means_scaled %>% select(c(mean_control_orientation, #create specific df for analysis
+                                      mean_asp_overall_chances,
+                                      mean_asp_sac,
+                                      mean_asp_afc,
+                                      mean_asp_fsc,
+                                      mean_asp_cfc))
 
-tab_model(m1,m2)
+m1 <- lm(mean_control_orientation ~.,data = df_CO_C) #compute model
 
-df %>%
-  select(c(mean_control_orientation,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
-  correlation::correlation()
+results_CO_C <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_CO_C) <- names_regr #rename dataframe with extracted results
+results_CO_C$DV <- rep("CO",nrow(results_CO_C))
+
+#get correlations
+correlation_CO_C <- df_CO_C %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_CO_C  <- correlation_CO_C [1:5,]
+correlation_CO_C <- as.data.frame(cbind(correlation_CO_C$Parameter1,
+                                      correlation_CO_C$Parameter2,
+                                      round(correlation_CO_C$r,3),
+                                      round(correlation_CO_C$CI_low,3),
+                                      round(correlation_CO_C$CI_high,3),
+                                      round(correlation_CO_C$p,3)))
+
+names(correlation_CO_C) <- names_corr
 
 #depressive symptoms - chances
-m1 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances, data = df)
-m2 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances+
-            mean_asp_sac+
-            mean_asp_afc+
-            mean_asp_fsc+
-            mean_asp_cfc, data = df)
+df_DS_C <- df_means_scaled %>% select(c(mean_depressive_symptoms, #create specific df for analysis
+                                      mean_asp_overall_chances,
+                                      mean_asp_sac,
+                                      mean_asp_afc,
+                                      mean_asp_fsc,
+                                      mean_asp_cfc))
 
-tab_model(m1,m2)
+m1 <- lm(mean_depressive_symptoms ~.,data = df_DS_C) #compute model
 
-df %>%
-  select(c(mean_depressive_symptoms,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
-  correlation::correlation()
+results_DS_C <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_DS_C) <- names_regr #rename dataframe with extracted results
+results_DS_C$DV <- rep("DS",nrow(results_DS_C))
+
+#get correlations
+correlation_DS_C <- df_DS_C %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_DS_C  <- correlation_DS_C [1:5,]
+correlation_DS_C <- as.data.frame(cbind(correlation_DS_C$Parameter1,
+                                      correlation_DS_C$Parameter2,
+                                      round(correlation_DS_C$r,3),
+                                      round(correlation_DS_C$CI_low,3),
+                                      round(correlation_DS_C$CI_high,3),
+                                      round(correlation_DS_C$p,3)))
+
+names(correlation_DS_C) <- names_corr
 
 #trait anxiety - chances
-m1 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances, data = df)
-m2 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances+
-            mean_asp_sac+
-            mean_asp_afc+
-            mean_asp_fsc+
-            mean_asp_cfc, data = df)
+df_TA_C <- df_means_scaled %>% select(c(mean_trait_anxiety, #create specific df for analysis
+                                      mean_asp_overall_chances,
+                                      mean_asp_sac,
+                                      mean_asp_afc,
+                                      mean_asp_fsc,
+                                      mean_asp_cfc))
 
-tab_model(m1,m2)
+m1 <- lm(mean_trait_anxiety ~.,data = df_TA_C) #compute model
 
-df %>%
-  select(c(mean_trait_anxiety,mean_asp_sac,mean_asp_afc,mean_asp_fsc,mean_asp_cfc))%>%
-  correlation::correlation()
+results_TA_C <- extractModelStatistics(m1) #use above defined function to extract model information
+names(results_TA_C) <- names_regr #rename dataframe with extracted results
+results_TA_C$DV <- rep("TA",nrow(results_TA_C))
+
+#get correlations
+correlation_TA_C <- df_TA_C %>%
+  correlation::correlation(p_adjust = "none")
+
+correlation_TA_C  <- correlation_TA_C [1:5,]
+correlation_TA_C <- as.data.frame(cbind(correlation_TA_C$Parameter1,
+                                      correlation_TA_C$Parameter2,
+                                      round(correlation_TA_C$r,3),
+                                      round(correlation_TA_C$CI_low,3),
+                                      round(correlation_TA_C$CI_high,3),
+                                      round(correlation_TA_C$p,3)))
+
+names(correlation_TA_C) <- names_corr
 ```
+
+#### get results in dataframes, to preocess later in forestplot (chances)
+```{r}
+#regression results
+results_regr_asp_chances <- rbind(results_SA_C,
+                                     results_VI_C,
+                                     results_CO_C,
+                                     results_DS_C,
+                                     results_TA_C)
+
+#correlation results
+results_corr_asp_chances <-rbind(correlation_SA_C,
+                                    correlation_VI_C,
+                                    correlation_CO_C,
+                                    correlation_DS_C,
+                                    correlation_TA_C)
+
+
+#remove dataframes which aren't needed anymore
+rm(list=c("results_SA_C", "results_VI_C", "results_CO_C", "results_DS_C", "results_TA_C","df_SA_C","df_VI_C","df_CO_C","df_DS_C","df_TA_C",
+          "correlation_SA_C","correlation_VI_C","correlation_CO_C","correlation_DS_C","correlation_TA_C"))
+```
+
+#### combine dataframes with effects
+```{r}
+results_regr_asp_importance$dimension <- rep("importance",nrow(results_regr_asp_importance))
+results_regr_asp_chances$dimension <- rep("chances",nrow(results_regr_asp_chances))
+
+#contains all regression results from above
+results_regr_aspiration <- as.data.frame(rbind(results_regr_asp_importance, results_regr_asp_chances))
+
+
+results_corr_asp_importance$dimension <- rep("importance",nrow(results_corr_asp_importance))
+results_corr_asp_chances$dimension <- rep("chances",nrow(results_corr_asp_chances))
+
+#contains all correlation results from above
+results_corr_aspiration <- as.data.frame(rbind(results_corr_asp_importance, results_corr_asp_chances))
+
+#remove dataframes which aren't needed anymore
+rm(list=c("results_regr_asp_importance", "results_regr_asp_chances", "results_corr_asp_importance", "results_corr_asp_chances"))
+
+#these show the distribution of effects by frequency
+hist(results_regr_aspiration$beta)
+hist(as.numeric(results_corr_aspiration$r))
+```
+
+
+
+
+
+
+
+
+
+
 
 ### group comparisons (assessment of relative centrality)
 ```{r}
