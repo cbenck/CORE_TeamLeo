@@ -822,110 +822,157 @@ results_corr_asp_chances <-rbind(correlation_SA_C,
 
 #remove dataframes which aren't needed anymore
 rm(list=c("results_SA_C", "results_VI_C", "results_CO_C", "results_DS_C", "results_TA_C","df_SA_C","df_VI_C","df_CO_C","df_DS_C","df_TA_C",
-          "correlation_SA_C","correlation_VI_C","correlation_CO_C","correlation_DS_C","correlation_TA_C"))
+          "correlation_SA_C","correlation_VI_C","correlation_CO_C",
+          "correlation_DS_C","correlation_TA_C"))
 ```
 
-#### combine dataframes with effects
+#### combine dataframes with effects and plot
 ```{r}
+#combine regression results
 results_regr_asp_importance$dimension <- rep("importance",nrow(results_regr_asp_importance))
 results_regr_asp_chances$dimension <- rep("chances",nrow(results_regr_asp_chances))
 
 #contains all regression results from above
-results_regr_aspiration <- as.data.frame(rbind(results_regr_asp_importance, results_regr_asp_chances))
+results_regr_aspiration <- rbind(results_regr_asp_importance, results_regr_asp_chances)
 
+#makes rownames in usable column
+results_regr_aspiration$labels <- rownames(results_regr_aspiration)
 
+#plotting
+reg_asp_plot_data <- results_regr_aspiration
+
+reg_asp_plot_data$combined_label <- with(reg_asp_plot_data, paste(DV, labels, sep = ": "))
+
+# To preserve the original order, convert combined_label directly to a factor
+# without changing the levels based on unique values or any sorting
+reg_asp_plot_data$combined_label <- factor(reg_asp_plot_data$combined_label, levels = reg_asp_plot_data$combined_label)
+
+# Now, plot using ggplot2 without reordering
+ggplot(reg_asp_plot_data, aes(x = beta, y = combined_label, color = dimension)) +
+  geom_point() +  # Add points for beta values
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) +  # Add horizontal error bars for CIs
+  facet_wrap(~dimension, scales = "free_y", ncol = 1, strip.position = "left") +  # Group by 'dimension'
+  theme_minimal() +  # Use a minimal theme for aesthetics
+  labs(x = "Effect Size (Beta)", y = "") +  # Label the x-axis, remove y-axis label
+  theme(legend.position = "none",  # Remove legend
+        panel.spacing = unit(1, "lines"),  # Adjust spacing between panels
+        axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size if needed
+        strip.background = element_blank(),  # Optional: remove facet label background
+        strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size
+
+#combine correlation results
 results_corr_asp_importance$dimension <- rep("importance",nrow(results_corr_asp_importance))
 results_corr_asp_chances$dimension <- rep("chances",nrow(results_corr_asp_chances))
 
 #contains all correlation results from above
-results_corr_aspiration <- as.data.frame(rbind(results_corr_asp_importance, results_corr_asp_chances))
+results_corr_aspiration <- rbind(results_corr_asp_importance, results_corr_asp_chances)
+
+#we have usable row names already here
+
+corr_asp_plot_data <- results_corr_aspiration
+
+corr_asp_plot_data$r <- as.numeric(corr_asp_plot_data$r)
+corr_asp_plot_data$ci_low <- as.numeric(corr_asp_plot_data$ci_low)
+corr_asp_plot_data$ci_high <- as.numeric(corr_asp_plot_data$ci_high)
+
+# Create a combined label for plotting
+corr_asp_plot_data$combined_label <- with(corr_asp_plot_data, paste(DV, IV, sep = ": "))
+
+# Convert the combined_label to a factor to maintain the original order
+corr_asp_plot_data$combined_label <- factor(corr_asp_plot_data$combined_label, 
+                                            levels = unique(corr_asp_plot_data$combined_label))
+
+# Create the forest plot with correct confidence intervals
+ggplot(corr_asp_plot_data, aes(x = r, y = combined_label, color = dimension)) +
+  geom_point() +  # Plot the correlation coefficients as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) +  # Draw horizontal error bars for CIs
+  facet_wrap(~dimension, scales = "free_y", ncol = 1) +  # Group by 'dimension'
+  theme_minimal() +  # Use a minimal theme for a clean look
+  labs(x = "Correlation Coefficient (r)", y = "") +  # Label the x-axis
+  theme(axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size
+        legend.position = "none",  # Remove the legend
+        strip.background = element_blank(),  # Remove facet label background for a cleaner look
+        strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size for readability
 
 #remove dataframes which aren't needed anymore
-rm(list=c("results_regr_asp_importance", "results_regr_asp_chances", "results_corr_asp_importance", "results_corr_asp_chances"))
+rm(list=c("results_regr_asp_importance",
+          "results_regr_asp_chances", 
+          "results_corr_asp_importance", 
+          "results_corr_asp_chances"))
 
 #these show the distribution of effects by frequency
 hist(results_regr_aspiration$beta)
 hist(as.numeric(results_corr_aspiration$r))
 ```
 
-
-
-
-
-
-
-
-
-
-
 ### group comparisons (assessment of relative centrality)
 ```{r}
 #scale all aspiration index means
-df <- df %>%
+df_centr_asp <- df %>%
   mutate(across(starts_with("mean_asp"), 
                 ~scale(.) %>% as.vector, 
                 .names = "{.col}_z"))
 
 #create binary variables by comparing z-score by person
 #1 = higher z-score for financial success
-df <- df %>% mutate(comp_fsi_afi = if_else(mean_asp_fsi_z > mean_asp_afi_z, 1, 0))
-df <- df %>% mutate(comp_fsi_sai = if_else(mean_asp_fsi_z > mean_asp_sai_z, 1, 0))
-df <- df %>% mutate(comp_fsi_cfi = if_else(mean_asp_fsi_z > mean_asp_cfi_z, 1, 0))
+df_centr_asp <- df_centr_asp %>% mutate(comp_fsi_afi = if_else(mean_asp_fsi_z > mean_asp_afi_z, 1, 0))
+df_centr_asp <- df_centr_asp %>% mutate(comp_fsi_sai = if_else(mean_asp_fsi_z > mean_asp_sai_z, 1, 0))
+df_centr_asp <- df_centr_asp %>% mutate(comp_fsi_cfi = if_else(mean_asp_fsi_z > mean_asp_cfi_z, 1, 0))
 
-df <- df %>% mutate(comp_fsc_afc = if_else(mean_asp_fsc_z > mean_asp_afc_z, 1, 0))
-df <- df %>% mutate(comp_fsc_sac = if_else(mean_asp_fsc_z > mean_asp_sac_z, 1, 0))
-df <- df %>% mutate(comp_fsc_cfc = if_else(mean_asp_fsc_z > mean_asp_cfc_z, 1, 0))
+df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_afc = if_else(mean_asp_fsc_z > mean_asp_afc_z, 1, 0))
+df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_sac = if_else(mean_asp_fsc_z > mean_asp_sac_z, 1, 0))
+df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_cfc = if_else(mean_asp_fsc_z > mean_asp_cfc_z, 1, 0))
 
 #t-tests
 ##self-actualization - importance
-report::report(t.test(mean_self_actualization ~ comp_fsi_afi,data = df))
-report::report(t.test(mean_self_actualization ~ comp_fsi_sai,data = df))
-report::report(t.test(mean_self_actualization ~ comp_fsi_cfi,data = df))
+report::report(t.test(mean_self_actualization ~ comp_fsi_afi,data = df_centr_asp))
+report::report(t.test(mean_self_actualization ~ comp_fsi_sai,data = df_centr_asp))
+report::report(t.test(mean_self_actualization ~ comp_fsi_cfi,data = df_centr_asp))
 
 ##self-actualization - chances
-report::report(t.test(mean_self_actualization ~ comp_fsc_afc,data = df))
-report::report(t.test(mean_self_actualization ~ comp_fsc_sac,data = df))
-report::report(t.test(mean_self_actualization ~ comp_fsc_cfc,data = df))
+report::report(t.test(mean_self_actualization ~ comp_fsc_afc,data = df_centr_asp))
+report::report(t.test(mean_self_actualization ~ comp_fsc_sac,data = df_centr_asp))
+report::report(t.test(mean_self_actualization ~ comp_fsc_cfc,data = df_centr_asp))
 
 ##vitality - importance
-report::report(t.test(mean_vitality ~ comp_fsi_afi,data = df))
-report::report(t.test(mean_vitality ~ comp_fsi_sai,data = df))
-report::report(t.test(mean_vitality ~ comp_fsi_cfi,data = df))
+report::report(t.test(mean_vitality ~ comp_fsi_afi,data = df_centr_asp))
+report::report(t.test(mean_vitality ~ comp_fsi_sai,data = df_centr_asp))
+report::report(t.test(mean_vitality ~ comp_fsi_cfi,data = df_centr_asp))
 
 ##vitality - chances
-report::report(t.test(mean_vitality ~ comp_fsc_afc,data = df))
-report::report(t.test(mean_vitality ~ comp_fsc_sac,data = df))
-report::report(t.test(mean_vitality ~ comp_fsc_cfc,data = df))
+report::report(t.test(mean_vitality ~ comp_fsc_afc,data = df_centr_asp))
+report::report(t.test(mean_vitality ~ comp_fsc_sac,data = df_centr_asp))
+report::report(t.test(mean_vitality ~ comp_fsc_cfc,data = df_centr_asp))
 
 ##control-orientation - importance
-report::report(t.test(mean_control_orientation ~ comp_fsi_afi,data = df))
-report::report(t.test(mean_control_orientation ~ comp_fsi_sai,data = df))
-report::report(t.test(mean_control_orientation ~ comp_fsi_cfi,data = df))
+report::report(t.test(mean_control_orientation ~ comp_fsi_afi,data = df_centr_asp))
+report::report(t.test(mean_control_orientation ~ comp_fsi_sai,data = df_centr_asp))
+report::report(t.test(mean_control_orientation ~ comp_fsi_cfi,data = df_centr_asp))
 
 ##control-orientation - chances
-report::report(t.test(mean_control_orientation ~ comp_fsc_afc,data = df))
-report::report(t.test(mean_control_orientation ~ comp_fsc_sac,data = df))
-report::report(t.test(mean_control_orientation ~ comp_fsc_cfc,data = df))
+report::report(t.test(mean_control_orientation ~ comp_fsc_afc,data = df_centr_asp))
+report::report(t.test(mean_control_orientation ~ comp_fsc_sac,data = df_centr_asp))
+report::report(t.test(mean_control_orientation ~ comp_fsc_cfc,data = df_centr_asp))
 
 ##depressive symptoms - importance
-report::report(t.test(mean_depressive_symptoms ~ comp_fsi_afi,data = df))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsi_sai,data = df))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsi_cfi,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsi_afi,data = df_centr_asp))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsi_sai,data = df_centr_asp))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsi_cfi,data = df_centr_asp))
 
 ##depressive symptoms - chances
-report::report(t.test(mean_depressive_symptoms ~ comp_fsc_afc,data = df))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsc_sac,data = df))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsc_cfc,data = df))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsc_afc,data = df_centr_asp))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsc_sac,data = df_centr_asp))
+report::report(t.test(mean_depressive_symptoms ~ comp_fsc_cfc,data = df_centr_asp))
 
 ##trait anxiety - importance
-report::report(t.test(mean_trait_anxiety ~ comp_fsi_afi,data = df))
-report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai,data = df))
-report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_fsi_afi,data = df_centr_asp))
+report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai,data = df_centr_asp))
+report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi,data = df_centr_asp))
 
 ##trait anxiety - chances
-report::report(t.test(mean_trait_anxiety ~ comp_fsc_afc,data = df))
-report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac,data = df))
-report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc,data = df))
+report::report(t.test(mean_trait_anxiety ~ comp_fsc_afc,data = df_centr_asp))
+report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac,data = df_centr_asp))
+report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc,data = df_centr_asp))
 ```
 
 ### guiding principles correlations
