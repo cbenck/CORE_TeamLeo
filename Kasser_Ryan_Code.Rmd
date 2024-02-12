@@ -923,56 +923,80 @@ df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_afc = if_else(mean_asp_fsc_z > 
 df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_sac = if_else(mean_asp_fsc_z > mean_asp_sac_z, 1, 0))
 df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_cfc = if_else(mean_asp_fsc_z > mean_asp_cfc_z, 1, 0))
 
+
 #t-tests
 ##self-actualization - importance
-report::report(t.test(mean_self_actualization ~ comp_fsi_afi,data = df_centr_asp))
-report::report(t.test(mean_self_actualization ~ comp_fsi_sai,data = df_centr_asp))
-report::report(t.test(mean_self_actualization ~ comp_fsi_cfi,data = df_centr_asp))
+test_1 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsi_afi, data = df_centr_asp)))
+test_2 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsi_sai, data = df_centr_asp)))
+test_3 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsi_cfi, data = df_centr_asp)))
 
 ##self-actualization - chances
-report::report(t.test(mean_self_actualization ~ comp_fsc_afc,data = df_centr_asp))
-report::report(t.test(mean_self_actualization ~ comp_fsc_sac,data = df_centr_asp))
-report::report(t.test(mean_self_actualization ~ comp_fsc_cfc,data = df_centr_asp))
+test_4 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsc_afc, data = df_centr_asp)))
+test_5 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsc_sac, data = df_centr_asp)))
+test_6 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsc_cfc, data = df_centr_asp)))
 
 ##vitality - importance
-report::report(t.test(mean_vitality ~ comp_fsi_afi,data = df_centr_asp))
-report::report(t.test(mean_vitality ~ comp_fsi_sai,data = df_centr_asp))
-report::report(t.test(mean_vitality ~ comp_fsi_cfi,data = df_centr_asp))
+test_7 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsi_afi, data = df_centr_asp)))
+test_8 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsi_sai, data = df_centr_asp)))
+test_9 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsi_cfi, data = df_centr_asp)))
 
 ##vitality - chances
-report::report(t.test(mean_vitality ~ comp_fsc_afc,data = df_centr_asp))
-report::report(t.test(mean_vitality ~ comp_fsc_sac,data = df_centr_asp))
-report::report(t.test(mean_vitality ~ comp_fsc_cfc,data = df_centr_asp))
+test_10 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsc_afc, data = df_centr_asp)))
+test_11 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsc_sac, data = df_centr_asp)))
+test_12 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsc_cfc, data = df_centr_asp)))
 
 ##control-orientation - importance
-report::report(t.test(mean_control_orientation ~ comp_fsi_afi,data = df_centr_asp))
-report::report(t.test(mean_control_orientation ~ comp_fsi_sai,data = df_centr_asp))
-report::report(t.test(mean_control_orientation ~ comp_fsi_cfi,data = df_centr_asp))
+test_13 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsi_afi, data = df_centr_asp)))
+test_14 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsi_sai, data = df_centr_asp)))
+test_15 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsi_cfi, data = df_centr_asp)))
 
 ##control-orientation - chances
-report::report(t.test(mean_control_orientation ~ comp_fsc_afc,data = df_centr_asp))
-report::report(t.test(mean_control_orientation ~ comp_fsc_sac,data = df_centr_asp))
-report::report(t.test(mean_control_orientation ~ comp_fsc_cfc,data = df_centr_asp))
+test_16 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsc_afc, data = df_centr_asp)))
+test_17 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsc_sac, data = df_centr_asp)))
+test_18 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsc_cfc, data = df_centr_asp)))
 
 ##depressive symptoms - importance
-report::report(t.test(mean_depressive_symptoms ~ comp_fsi_afi,data = df_centr_asp))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsi_sai,data = df_centr_asp))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsi_cfi,data = df_centr_asp))
+test_19 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsi_afi, data = df_centr_asp)))
+test_20 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsi_sai, data = df_centr_asp)))
+test_21 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsi_cfi, data = df_centr_asp)))
 
 ##depressive symptoms - chances
-report::report(t.test(mean_depressive_symptoms ~ comp_fsc_afc,data = df_centr_asp))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsc_sac,data = df_centr_asp))
-report::report(t.test(mean_depressive_symptoms ~ comp_fsc_cfc,data = df_centr_asp))
+test_22 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsc_afc, data = df_centr_asp)))
+test_23 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsc_sac, data = df_centr_asp)))
+test_24 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsc_cfc, data = df_centr_asp)))
 
 ##trait anxiety - importance
-report::report(t.test(mean_trait_anxiety ~ comp_fsi_afi,data = df_centr_asp))
-report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai,data = df_centr_asp))
-report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi,data = df_centr_asp))
+test_25 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_afi, data = df_centr_asp)))
+test_26 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai, data = df_centr_asp)))
+test_27 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi, data = df_centr_asp)))
 
 ##trait anxiety - chances
-report::report(t.test(mean_trait_anxiety ~ comp_fsc_afc,data = df_centr_asp))
-report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac,data = df_centr_asp))
-report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc,data = df_centr_asp))
+test_28 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_afc, data = df_centr_asp)))
+test_29 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac, data = df_centr_asp)))
+test_30 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc, data = df_centr_asp)))
+
+#combine results from all tests
+results_t_test_aspiration <- do.call(rbind, list(test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10, 
+                                                 test_11, test_12, test_13, test_14, test_15, test_16, test_17, test_18, test_19, test_20, 
+                                                 test_21, test_22, test_23, test_24, test_25, test_26, test_27, test_28, test_29, test_30))
+
+
+# Remove the individual dataframes from environment
+test_vars <- paste0("test_", 1:30)
+rm(list = test_vars)
+
+#plot effects
+# Combine Parameter and Group into a new column for labeling
+results_t_test_aspiration$Label <- paste(results_t_test_aspiration$Parameter, "-", results_t_test_aspiration$Group)
+
+# Adjusting the plot to use the new Label column for y-axis labels
+ggplot(results_t_test_aspiration, aes(x = Difference, y = reorder(Label, ID))) +
+  geom_point() +  # Add the mean difference as points
+  geom_errorbarh(aes(xmin = CI_low, xmax = CI_high), height = 0.2) +  # Add CI as horizontal error bars
+  labs(y = "Comparison", x = "Mean Difference") +  # Label the axes
+  theme_minimal() +  # Use a minimal theme
+  theme(axis.text.y = element_text(size = 7),  # Adjust text size for clarity if needed
+        axis.title.y = element_blank())  # Remove the y-axis title for a cleaner look
 ```
 
 ### guiding principles correlations
