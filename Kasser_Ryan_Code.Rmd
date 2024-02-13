@@ -979,7 +979,7 @@ test_30 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc
 results_t_test_aspiration <- do.call(rbind, list(test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10, 
                                                  test_11, test_12, test_13, test_14, test_15, test_16, test_17, test_18, test_19, test_20, 
                                                  test_21, test_22, test_23, test_24, test_25, test_26, test_27, test_28, test_29, test_30))
-
+results_t_test_aspiration <- as.data.frame(results_t_test_aspiration)
 
 # Remove the individual dataframes from environment
 test_vars <- paste0("test_", 1:30)
@@ -990,75 +990,176 @@ rm(list = test_vars)
 results_t_test_aspiration$Label <- paste(results_t_test_aspiration$Parameter, "-", results_t_test_aspiration$Group)
 
 # Adjusting the plot to use the new Label column for y-axis labels
-ggplot(results_t_test_aspiration, aes(x = Difference, y = reorder(Label, ID))) +
+ggplot(results_t_test_aspiration, aes(x = Difference, y = Label)) +
   geom_point() +  # Add the mean difference as points
   geom_errorbarh(aes(xmin = CI_low, xmax = CI_high), height = 0.2) +  # Add CI as horizontal error bars
   labs(y = "Comparison", x = "Mean Difference") +  # Label the axes
   theme_minimal() +  # Use a minimal theme
   theme(axis.text.y = element_text(size = 7),  # Adjust text size for clarity if needed
         axis.title.y = element_blank())  # Remove the y-axis title for a cleaner look
+
+
+hist(results_t_test_aspiration$d)
+
+results_t_test_aspiration_05 <- subset(results_t_test_aspiration, p < .05)
 ```
 
 ### guiding principles correlations
 ```{r}
+names_corr <- c("DV", "IV", "r", "ci_low", "ci_high", "p")
+
 ###correlations of mean rank-order of guiding principles with outcomes
 #money
-df %>%
-  select(c(mean_gpr_money,mean_self_actualization,mean_vitality,mean_control_orientation,
-           mean_depressive_symptoms,mean_trait_anxiety))%>%
-  correlation::correlation()
+correlation_gpr_money <- df_means_scaled %>%
+                        select(c(mean_gpr_money,mean_self_actualization,mean_vitality,mean_control_orientation,
+                        mean_depressive_symptoms,mean_trait_anxiety))%>%
+                        correlation::correlation(p_adjust = "none")
+
+correlation_gpr_money  <- correlation_gpr_money[1:5,]
+correlation_gpr_money <- as.data.frame(cbind(correlation_gpr_money$Parameter1,
+                                      correlation_gpr_money$Parameter2,
+                                      round(correlation_gpr_money$r,3),
+                                      round(correlation_gpr_money$CI_low,3),
+                                      round(correlation_gpr_money$CI_high,3),
+                                      round(correlation_gpr_money$p,3)))
+
+names(correlation_gpr_money) <- names_corr
 
 #family security
-df %>%
-  select(c(mean_gpr_family_security,mean_self_actualization,mean_vitality,
-           mean_control_orientation,mean_depressive_symptoms,mean_trait_anxiety))%>%
-  correlation::correlation()
+correlation_gpr_family <- df_means_scaled %>%
+                        select(c(mean_gpr_family_security,mean_self_actualization,mean_vitality,
+                        mean_control_orientation,mean_depressive_symptoms,mean_trait_anxiety))%>%
+                        correlation::correlation(p_adjust = "none")
+
+correlation_gpr_family  <- correlation_gpr_family[1:5,]
+correlation_gpr_family <- as.data.frame(cbind(correlation_gpr_family$Parameter1,
+                                      correlation_gpr_family$Parameter2,
+                                      round(correlation_gpr_family$r,3),
+                                      round(correlation_gpr_family$CI_low,3),
+                                      round(correlation_gpr_family$CI_high,3),
+                                      round(correlation_gpr_family$p,3)))
+
+names(correlation_gpr_family) <- names_corr
 
 #global welfare
-df %>%
-  select(c(mean_gpr_global_welfare,mean_self_actualization,mean_vitality,
-           mean_control_orientation,mean_depressive_symptoms,mean_trait_anxiety))%>%
-  correlation::correlation()
+correlation_gpr_global_welfare <- df_means_scaled %>%
+                                select(c(mean_gpr_global_welfare,mean_self_actualization,mean_vitality,
+                                mean_control_orientation,mean_depressive_symptoms,mean_trait_anxiety))%>%
+                                correlation::correlation(p_adjust = "none")
 
+correlation_gpr_global_welfare  <- correlation_gpr_global_welfare[1:5,]
+correlation_gpr_global_welfare <- as.data.frame(cbind(correlation_gpr_global_welfare$Parameter1,
+                                      correlation_gpr_global_welfare$Parameter2,
+                                      round(correlation_gpr_global_welfare$r,3),
+                                      round(correlation_gpr_global_welfare$CI_low,3),
+                                      round(correlation_gpr_global_welfare$CI_high,3),
+                                      round(correlation_gpr_global_welfare$p,3)))
 
-
-#centrality analysis (through z-standardization again)
-#t-tests
+names(correlation_gpr_global_welfare) <- names_corr
 ```
+
+#### combine correlative findings and plot
+
+```{r}
+#correlation results
+results_corr_gpr <- rbind(correlation_gpr_money,
+                          correlation_gpr_family,
+                          correlation_gpr_global_welfare)
+
+#remove non-needed dataframes
+
+rm(list = c("correlation_gpr_money",
+            "correlation_gpr_family",
+            "correlation_gpr_global_welfare"))
+
+#we have usable row names already here
+
+corr_gpr_plot_data <- results_corr_gpr
+
+corr_gpr_plot_data$r <- as.numeric(corr_gpr_plot_data$r)
+corr_gpr_plot_data$ci_low <- as.numeric(corr_gpr_plot_data$ci_low)
+corr_gpr_plot_data$ci_high <- as.numeric(corr_gpr_plot_data$ci_high)
+
+# Create a combined label for plotting
+corr_gpr_plot_data$combined_label <- with(corr_gpr_plot_data, paste(DV, IV, sep = ": "))
+
+# Convert the combined_label to a factor to maintain the original order
+corr_gpr_plot_data$combined_label <- factor(corr_gpr_plot_data$combined_label, 
+                                            levels = unique(corr_gpr_plot_data$combined_label))
+
+# Create the forest plot with correct confidence intervals
+ggplot(corr_gpr_plot_data, aes(x = r, y = combined_label)) +
+  geom_point() +  # Plot the correlation coefficients as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) +  # Draw horizontal error bars for CIs
+  theme_minimal() +  # Use a minimal theme for a clean look
+  labs(x = "Correlation Coefficient (r)", y = "") +  # Label the x-axis
+  theme(axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size
+        legend.position = "none",  # Remove the legend
+        strip.background = element_blank(),  # Remove facet label background for a cleaner look
+        strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size for readability
+```
+
+
+
+
 
 ### guiding principles comparisons
 ```{r}
 #scale all guiding principles means
-df <- df %>%
+df_centr_gpr <- df %>%
   mutate(across(starts_with("mean_gpr"), 
                 ~scale(.) %>% as.vector, 
                 .names = "{.col}_z"))
 
 #create binary variables by comparing z-score by person
 #1 = higher z-score for financial success
-df <- df %>% mutate(comp_money_family = if_else(mean_gpr_money_z > mean_gpr_family_security_z, 1, 0))
-df <- df %>% mutate(comp_money_welfare = if_else(mean_gpr_money_z > mean_gpr_global_welfare_z, 1, 0))
+df_centr_gpr <- df_centr_gpr %>% mutate(comp_money_family = if_else(mean_gpr_money_z > mean_gpr_family_security_z, 1, 0))
+df_centr_gpr <- df_centr_gpr %>% mutate(comp_money_welfare = if_else(mean_gpr_money_z > mean_gpr_global_welfare_z, 1, 0))
 
 #t-tests
 ##self-actualization
-report::report(t.test(mean_self_actualization ~ comp_money_family,data = df))
-report::report(t.test(mean_self_actualization ~ comp_money_welfare,data = df))
+test_1 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_money_family,data = df_centr_gpr)))
+test_2 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_money_welfare,data = df_centr_gpr)))
 
 ##vitality
-report::report(t.test(mean_vitality ~ comp_money_family,data = df))
-report::report(t.test(mean_vitality ~ comp_money_welfare,data = df))
+test_3 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_money_family,data = df_centr_gpr)))
+test_4 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_money_welfare,data = df_centr_gpr)))
 
 ##control orientation
-report::report(t.test(mean_control_orientation ~ comp_money_family,data = df))
-report::report(t.test(mean_control_orientation ~ comp_money_welfare,data = df))
+test_5 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_money_family,data = df_centr_gpr)))
+test_6 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_money_welfare,data = df_centr_gpr)))
 
 ##depressive symptoms
-report::report(t.test(mean_depressive_symptoms ~ comp_money_family,data = df))
-report::report(t.test(mean_depressive_symptoms ~ comp_money_welfare,data = df))
+test_7 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_money_family,data = df_centr_gpr)))
+test_8 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_money_welfare,data = df_centr_gpr)))
 
 ##trait anxiety
-report::report(t.test(mean_trait_anxiety ~ comp_money_family,data = df))
-report::report(t.test(mean_trait_anxiety ~ comp_money_welfare,data = df))
+test_9 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_money_family,data = df_centr_gpr)))
+test_10 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_money_welfare,data = df_centr_gpr)))
+
+#combine results from all tests
+results_t_test_gpr <- do.call(rbind, list(test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10))
+results_t_test_gpr <- as.data.frame(results_t_test_gpr)
+
+# Remove the individual dataframes from environment
+test_vars <- paste0("test_", 1:10)
+rm(list = test_vars)
+
+#plot effects
+# Combine Parameter and Group into a new column for labeling
+results_t_test_gpr$Label <- paste(results_t_test_gpr$Parameter, "-", results_t_test_gpr$Group)
+
+# Adjusting the plot to use the new Label column for y-axis labels
+ggplot(results_t_test_gpr, aes(x = Difference, y = Label)) +
+  geom_point() +  # Add the mean difference as points
+  geom_errorbarh(aes(xmin = CI_low, xmax = CI_high), height = 0.2) +  # Add CI as horizontal error bars
+  labs(y = "Comparison", x = "Mean Difference") +  # Label the axes
+  theme_minimal() +  # Use a minimal theme
+  theme(axis.text.y = element_text(size = 7),  # Adjust text size for clarity if needed
+        axis.title.y = element_blank())  # Remove the y-axis title for a cleaner look
+
+
+hist(results_t_test_gpr$d)
 ```
 
 
