@@ -1223,7 +1223,7 @@ ggplot(results_t_test_gpr, aes(x = Difference, y = Label)) +
 
 hist(results_t_test_gpr$d)
 ```
-# Combine effects
+# Combine effects correlational
 
 ```{r}
 #combine correlational effects
@@ -1248,32 +1248,32 @@ results_corr$IV <- sub("^gpr_", "", results_corr$IV)
 results_corr$IV <- sub("^asp_", "", results_corr$IV)
 
 #make order more intuitive
-test <- results_corr %>%
+results_corr <- results_corr %>%
   mutate(dimension = factor(dimension, levels = c("importance", "chances", "gpr"))) %>%
   mutate(DV = factor(DV, levels = c("self_actualization", "vitality","control_orientation","depressive_symptoms","trait_anxiety"))) %>%
   arrange(DV, dimension)
 
 # Now, 'dimension' is ordered as per the specified levels, and the dataframe is sorted accordingly.
 
-corr_asp_plot_data <- test
+results_corr_plot_data <- results_corr
 
-corr_asp_plot_data$r <- as.numeric(corr_asp_plot_data$r)
-corr_asp_plot_data$ci_low <- as.numeric(corr_asp_plot_data$ci_low)
-corr_asp_plot_data$ci_high <- as.numeric(corr_asp_plot_data$ci_high)
+results_corr_plot_data$r <- as.numeric(results_corr_plot_data$r)
+results_corr_plot_data$ci_low <- as.numeric(results_corr_plot_data$ci_low)
+results_corr_plot_data$ci_high <- as.numeric(results_corr_plot_data$ci_high)
 
 # Create a combined label for plotting
-corr_asp_plot_data$combined_label <- with(corr_asp_plot_data, paste(DV, IV, sep = ": "))
+results_corr_plot_data$combined_label <- with(results_corr_plot_data, paste(DV, IV, sep = ": "))
 
 # Convert the combined_label to a factor to maintain the original order
-corr_asp_plot_data$combined_label <- factor(corr_asp_plot_data$combined_label, 
-                                            levels = unique(corr_asp_plot_data$combined_label))
+results_corr_plot_data$combined_label <- factor(results_corr_plot_data$combined_label, 
+                                            levels = unique(results_corr_plot_data$combined_label))
 
-corr_asp_plot_data$text_label <- with(corr_asp_plot_data, 
+results_corr_plot_data$text_label <- with(results_corr_plot_data, 
                                       paste0("", round(r, 2), 
                                              ", CI [", round(ci_low, 2), ", ", round(ci_high, 2), "]"))
 
 # Create the forest plot with correct confidence intervals and add the text labels
-ggplot(corr_asp_plot_data, aes(x = r, y = combined_label,color = dimension)) +
+ggplot(results_corr_plot_data, aes(x = r, y = combined_label,color = dimension)) +
   geom_point() +  # Plot the correlation coefficients as points
   geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) +  # Draw horizontal error bars for CIs
   geom_text(aes(label = text_label, x = 1.05 * max(ci_high)), hjust = 0, size = 3, nudge_x = 0.02, colour = "black") +
@@ -1281,12 +1281,66 @@ ggplot(corr_asp_plot_data, aes(x = r, y = combined_label,color = dimension)) +
   theme_minimal() +  # Use a minimal theme for a clean look
   labs(x = "Correlation Coefficient (r)", y = "") +  # Label the x-axis
   theme_classic()+
+  xlim(-0.3,.40)+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black")+
   theme(axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size
         legend.position = "none",  # Remove the legend
         strip.background = element_blank(),  # Remove facet label background for a cleaner look
         strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size for readability
+
+#ggsave("forest_plot_corr.pdf", width = 8, height = 10)
 ```
 
+# Combine effect comparison
+
+```{r}
+#combine aspiration and guiding principle findings
+
+results_ttest <- rbind(results_t_test_aspiration, results_t_test_gpr)
+
+#removing prefix 'mean_'
+results_ttest$Parameter <- sub("^mean_", "", results_ttest$Parameter)
+
+#removing prefix 'comp_'
+results_ttest$Group <- sub("^mean_", "", results_ttest$Group)
+
+#recompute label
+results_ttest$Label <- paste(results_ttest$Parameter, "-", results_ttest$Group)
+
+#compute dimension variable
+results_ttest <- results_ttest %>%
+  mutate(dimension = case_when(
+    grepl("i$", Label) ~ "importance",
+    grepl("c$", Label) ~ "chances",
+    grepl("[ey]$", Label) ~ "gpr",
+    TRUE ~ NA_character_  # Handles cases that don't match any condition
+  ))
+
+#plotting
+
+results_ttest_plot_data <- results_ttest
+
+results_ttest_plot_data$text_label <- with(results_ttest_plot_data, 
+                                      paste0("", round(d, 2), 
+                                             ", CI [", round(d_CI_low, 2), ", ", round(d_CI_high, 2), "]"))
+
+ggplot(results_ttest_plot_data, aes(x = d, y = Label, color = dimension)) +
+  geom_point() +  # Plot the correlation coefficients as points
+  geom_errorbarh(aes(xmin = d_CI_low, xmax = d_CI_high), height = 0.2) +  # Draw horizontal error bars for CIs
+  geom_text(aes(label = text_label, x = 1.05 * max(d_CI_high)), hjust = 0, size = 3, nudge_x = 0.02, colour = "black") +
+  facet_wrap(~dimension, scales = "free_y", ncol = 1) +  # Group by 'dimension'
+  theme_minimal() +  # Use a minimal theme for a clean look
+  labs(x = "Correlation Coefficient (r)", y = "") +  # Label the x-axis
+  theme_classic()+
+  xlim(-0.3,.50)+
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black")+
+  theme(axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size
+        legend.position = "none",  # Remove the legend
+        strip.background = element_blank(),  # Remove facet label background for a cleaner look
+        strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size for readability
+
+#ggsave("forest_plot_t_test.pdf", width = 8, height = 10)
+```
 
 
 
