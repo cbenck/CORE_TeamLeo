@@ -20,6 +20,7 @@ library(tidyr) # 1.3.0
 library(ggplot2) # 3.4.4
 library(sjPlot) # 2.8.14
 library(broom) # 1.0.5
+library(writexl)
 ```
 
 # Load Data
@@ -145,24 +146,24 @@ names(df) <- ifelse(grepl("^AN_", names(df)), gsub("_R$", "", names(df)), names(
 
 ###independent variables
 #Aspiration index: importance
-psych::alpha(df%>% select(starts_with("ASP_SAI")))[[1]]
-psych::alpha(df%>% select(starts_with("ASP_AFI")))[[1]]
-psych::alpha(df%>% select(starts_with("ASP_CFI")))[[1]]
-psych::alpha(df%>% select(starts_with("ASP_FSI")))[[1]]
+alpha_1 <- psych::alpha(df%>% select(starts_with("ASP_SAI")))[[1]]
+alpha_2 <- psych::alpha(df%>% select(starts_with("ASP_AFI")))[[1]]
+alpha_3 <- psych::alpha(df%>% select(starts_with("ASP_CFI")))[[1]]
+alpha_4 <- psych::alpha(df%>% select(starts_with("ASP_FSI")))[[1]]
 
 #Aspiration index: chances
-psych::alpha(df%>% select(starts_with("ASP_SAC")))[[1]]
-psych::alpha(df%>% select(starts_with("ASP_AFC")))[[1]]
-psych::alpha(df%>% select(starts_with("ASP_CFC")))[[1]]
-psych::alpha(df%>% select(starts_with("ASP_FSC")))[[1]]
+alpha_5 <- psych::alpha(df%>% select(starts_with("ASP_SAC")))[[1]]
+alpha_6 <- psych::alpha(df%>% select(starts_with("ASP_AFC")))[[1]]
+alpha_7 <- psych::alpha(df%>% select(starts_with("ASP_CFC")))[[1]]
+alpha_8 <- psych::alpha(df%>% select(starts_with("ASP_FSC")))[[1]]
 
 #Guiding principles:
 ## money
-psych::alpha(df%>%select(grep("^GPR_.*_1$", names(df), value = TRUE)))[[1]]
+alpha_9 <- psych::alpha(df%>%select(grep("^GPR_.*_1$", names(df), value = TRUE)))[[1]]
 ##family security
-psych::alpha(df%>%select(grep("^GPR_.*_2$", names(df), value = TRUE)))[[1]]
+alpha_10 <- psych::alpha(df%>%select(grep("^GPR_.*_2$", names(df), value = TRUE)))[[1]]
 ##global welfare
-psych::alpha(df%>%select(grep("^GPR_.*_3$", names(df), value = TRUE)))[[1]]
+alpha_11 <- psych::alpha(df%>%select(grep("^GPR_.*_3$", names(df), value = TRUE)))[[1]]
 ##spirituality
 psych::alpha(df%>%select(grep("^GPR_.*_4$", names(df), value = TRUE)))[[1]]
 ##hedonism
@@ -170,15 +171,48 @@ psych::alpha(df%>%select(grep("^GPR_.*_5$", names(df), value = TRUE)))[[1]]
 
 ###dependent variables
 #self-actualization
-psych::alpha(df%>% select(starts_with("SA_")))[[1]]
+alpha_12 <- psych::alpha(df%>% select(starts_with("SA_")))[[1]]
 #vitality
-psych::alpha(df%>% select(starts_with("VI_")))[[1]]
+alpha_13 <- psych::alpha(df%>% select(starts_with("VI_")))[[1]]
 #control orientation (only care about control-subscale)
-psych::alpha(df%>%select(grep("^CO_.*_C$", names(df), value = TRUE)))[[1]]
+alpha_14 <- psych::alpha(df%>%select(grep("^CO_.*_C$", names(df), value = TRUE)))[[1]]
 #depressive symptoms
-psych::alpha(df%>% select(starts_with("CES_")))[[1]]
+alpha_15 <- psych::alpha(df%>% select(starts_with("CES_")))[[1]]
 #trait anxiety
-psych::alpha(df%>% select(starts_with("AN_")))[[1]]
+alpha_16 <- psych::alpha(df%>% select(starts_with("AN_")))[[1]]
+
+#save all needed reliabilties for reporting (this computes means and SD already)
+reliabilities <- rbind(alpha_1, alpha_2, alpha_3, alpha_4,
+                       alpha_5, alpha_6, alpha_7, alpha_8,
+                       alpha_9, alpha_10, alpha_11, alpha_12,
+                       alpha_13, alpha_14, alpha_15, alpha_16)
+
+reliabilities$labels <- c("SAI", "AFI", "CFI", "FSI", "SAC", "AFC", "CFC", "FSC",
+                          "gpr_money", "gpr_family", "gpr_welfare", "self_actualization",
+                          "vitality", "control_orientation", "depressive_symptoms", "trait_anxiety")
+
+#reduce to needed columns I
+reliabilities <- reliabilities %>%
+  select(c(labels, mean, sd, raw_alpha))
+
+#round numeric values
+reliabilities <- data.frame(lapply(reliabilities, function(x) if(is.numeric(x)) round(x, 2) else x))
+
+#compute combined M (SD) column
+reliabilities$M_SD <- paste(reliabilities$mean, " (", reliabilities$sd, ")", sep="")
+
+#reduce to needed columns II
+reliabilities <- reliabilities %>%
+  select(c(labels, M_SD, raw_alpha))
+
+#save relevant data and copy-paste to document (replace ',' with '.' in reliabilties and change e.g. 0.30 to .30)
+write_xlsx(reliabilities[, c("M_SD", "raw_alpha")], "M_SD_rel_data.xlsx")
+
+#exclude non-needed df
+rm(list = c("alpha_1", "alpha_2", "alpha_3", "alpha_4",
+            "alpha_5", "alpha_6", "alpha_7", "alpha_8",
+            "alpha_9", "alpha_10", "alpha_11", "alpha_12",
+            "alpha_13", "alpha_14", "alpha_15", "alpha_16"))
 ```
 
 ## demographics
@@ -340,10 +374,10 @@ summary(manova_importances)
 report::report(manova_importances)
 
 #follow up t-tests
-report::report(t.test(mean_asp_sai ~gender, data = df_manova))
-report::report(t.test(mean_asp_afi ~gender, data = df_manova))
-report::report(t.test(mean_asp_cfi ~gender, data = df_manova))
-report::report(t.test(mean_asp_fsi ~gender, data = df_manova))
+asp_gen_1 <- as.data.frame(report::report(t.test(mean_asp_sai ~gender, data = df_manova)))
+asp_gen_2 <- as.data.frame(report::report(t.test(mean_asp_afi ~gender, data = df_manova)))
+asp_gen_3 <- as.data.frame(report::report(t.test(mean_asp_cfi ~gender, data = df_manova)))
+asp_gen_4 <- as.data.frame(report::report(t.test(mean_asp_fsi ~gender, data = df_manova)))
 
 #manova chances
 manova_chances <- manova(cbind(mean_asp_sac,mean_asp_afc,mean_asp_cfc,mean_asp_fsc)
@@ -352,10 +386,39 @@ summary(manova_chances)
 report::report(manova_chances)
 
 #follow up t-tests
-report::report(t.test(mean_asp_sac ~gender, data = df_manova))
-report::report(t.test(mean_asp_afc ~gender, data = df_manova))
-report::report(t.test(mean_asp_cfc ~gender, data = df_manova))
-report::report(t.test(mean_asp_fsc ~gender, data = df_manova))
+asp_gen_5 <- as.data.frame(report::report(t.test(mean_asp_sac ~gender, data = df_manova)))
+asp_gen_6 <- as.data.frame(report::report(t.test(mean_asp_afc ~gender, data = df_manova)))
+asp_gen_7 <- as.data.frame(report::report(t.test(mean_asp_cfc ~gender, data = df_manova)))
+asp_gen_8 <- as.data.frame(report::report(t.test(mean_asp_fsc ~gender, data = df_manova)))
+
+#combine t-tests
+asp_gen <- rbind(asp_gen_1, asp_gen_2, asp_gen_3, asp_gen_4,
+                 asp_gen_5, asp_gen_6, asp_gen_7, asp_gen_8)
+
+#reduce to needed variables I
+asp_gen <- asp_gen %>%
+  select(Parameter, Difference, t, d, CI_low, CI_high)
+
+#round numeric values
+asp_gen <- data.frame(lapply(asp_gen, function(x) if(is.numeric(x)) round(x, 2) else x))
+
+#compute combined d [CI]
+asp_gen$D_CI <- paste(asp_gen$d, " [", asp_gen$CI_low,", ", asp_gen$CI_high,"]", sep="")
+
+#reduce to needed columns II
+asp_gen <- asp_gen %>%
+  select(c(Parameter, Difference, t, D_CI))
+
+#save relevant data and copy-paste to document ()use text-to-column function and set each column as 'text' so nothing is trnasformed to a date)
+write.csv(asp_gen, "gender_aspiration.csv")
+
+#delete non-needed files
+rm(list = c("asp_gen_1", "asp_gen_2", "asp_gen_3", "asp_gen_4",
+            "asp_gen_5", "asp_gen_6", "asp_gen_7", "asp_gen_8"))
+
+
+
+
 
 #these correlations have been computed above with the other means already
 #this section was create to give a more focal perspective on these correlations
@@ -364,8 +427,10 @@ df_importance <- df_means %>% select(ends_with("i"))
 
 df_importance %>%
   correlation::correlation(p_adjust = "none") %>%
-  summary(redundant = TRUE) %>%
-  plot()
+  summary(redundant = TRUE) 
+
+df_importance %>%
+  correlation::correlation(p_adjust = "none") 
   
 #intercorrelate all chances
 df_chance <- df_means %>% select(ends_with("c"))
@@ -374,6 +439,9 @@ df_chance %>%
   correlation::correlation(p_adjust = "none") %>%
   summary(redundant = TRUE) %>%
   plot()
+
+df_chance %>%
+  correlation::correlation(p_adjust = "none") 
 ```
 
 ### outcome by gender and aspiration interactions
