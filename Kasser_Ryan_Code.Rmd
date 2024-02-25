@@ -21,6 +21,7 @@ library(ggplot2) # 3.4.4
 library(sjPlot) # 2.8.14
 library(broom) # 1.0.5
 library(writexl)
+library(forcats)
 ```
 
 # Load Data
@@ -1513,18 +1514,10 @@ df_asp_imp_all$study <- as.numeric(df_asp_imp_all$study)
 
 df_asp_imp_all <- df_asp_imp_all %>% arrange(Label, study)
 
-test <- df_asp_imp_all
-
-
-
-library(ggplot2)
-library(dplyr)
-library(forcats) # For working with factors
-
-# Assuming the dataframe is named test
+#plotting
 
 # Step 1: Data Preparation
-test <- test %>%
+df_asp_imp_all <- df_asp_imp_all %>%
   mutate(
     study = as.factor(study), # Ensure 'study' is a factor
     # Create a unique label for each combination of Label and Study for plotting
@@ -1534,20 +1527,43 @@ test <- test %>%
   ) %>%
   arrange(Label, study)
 
+#make label more readable
+df_asp_imp_all$unique_label <- gsub(" - comp_fsi_", ": ", df_asp_imp_all$unique_label)
+df_asp_imp_all$unique_label <- gsub("_", " ", df_asp_imp_all$unique_label)
+
+#make data more readable
+df_asp_imp_all$text_label <- gsub("0,", "0.00", df_asp_imp_all$text_label)
+df_asp_imp_all$text_label <- gsub(", CI", "", df_asp_imp_all$text_label)
+df_asp_imp_all$text_label <- gsub(" CI", "", df_asp_imp_all$text_label)
+
+#define lower bound of x-axis flexibly
+xlim_lo <- 1.05*min(df_asp_imp_all$ci.lo)
+
 # Step 2: Plotting
-ggplot(test, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
+ggplot(df_asp_imp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
   geom_point() + # Plot the effect sizes as points
   geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
   scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
-  labs(x = "Effect Size", y = "") +
-  theme_minimal() +
+    labs(x = "", y = "") +
+  theme_classic() +
   theme(
     legend.position = "bottom",
-    axis.text.y = element_text(size = 7),
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
-    axis.ticks = element_blank()
-  )+geom_vline(xintercept = 0)
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,11.5,13.5,15.5,
+                            18.5,21.5,24.5,26.5,28.5,30.5,
+                            32.5,34.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.05 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(xlim_lo,2)
+
+#ggsave("forest_plot_t_test_small.pdf", width = 8, height = 10)
+#ggsave("forest_plot_t_test_small.png", width = 8, height = 10)
 ```
 
 
