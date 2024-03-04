@@ -1786,20 +1786,6 @@ df_asp_gp_all <- df_asp_gp_all %>%
 
 df_asp_gp_all$plot_order <- seq(1:nrow(df_asp_gp_all))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #make data more readable
 df_asp_gp_all$text_label <- gsub("0,", "0.00", df_asp_gp_all$text_label)
 df_asp_gp_all$text_label <- gsub(", CI", "", df_asp_gp_all$text_label)
@@ -1829,5 +1815,289 @@ ggplot(df_asp_gp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), c
   geom_text(aes(label = text_label, x = 1.05 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
   xlim(xlim_lo,2)
 
+#ggsave("forest_plot_t_test_guiding.pdf", width = 8, height = 10)
+
+
 ```
+
+## correlations
+### preparation
+we did it here a bit more parsimonious than for the t-tests
+```{r}
+#combine aspiration and guiding principle findings
+
+results_corr <- rbind(results_corr_aspiration, results_corr_gpr)
+
+#removing prefix 'mean_'
+results_corr$DV <- sub("^mean_", "", results_corr$DV)
+
+#removing prefix 'comp_'
+results_corr$IV <- sub("^mean_", "", results_corr$IV)
+
+#recompute label
+results_corr$Label <- paste(results_corr$DV, "-", results_corr$IV)
+
+#compute dimension variable
+results_corr <- results_corr %>%
+  mutate(dimension = case_when(
+    grepl("i$", Label) ~ "importance",
+    grepl("c$", Label) ~ "chances",
+    grepl("[ey]$", Label) ~ "gpr",
+    TRUE ~ NA_character_  # Handles cases that don't match any condition
+  ))
+
+#remove overall scores
+results_corr <- results_corr[!grepl("_overall", results_corr$IV), ]
+
+#remove correlations of guiding principles with family and welfare (non-focal)
+results_corr <- results_corr[!grepl("family", results_corr$Label), ]
+results_corr <- results_corr[!grepl("welfare", results_corr$Label), ]
+
+#make labels more readable
+results_corr$Label <- gsub(" - asp_", ": ", results_corr$Label)
+results_corr$Label <- gsub(" - gpr_", ": ", results_corr$Label)
+results_corr$Label <- gsub(" global_", " ", results_corr$Label)
+results_corr$Label <- gsub("_security", "", results_corr$Label)
+results_corr$Label <- gsub("_", " ", results_corr$Label)
+
+#text label for statistical information
+results_corr$r <- as.numeric(results_corr$r)
+results_corr$ci_low <- as.numeric(results_corr$ci_low)
+results_corr$ci_high <- as.numeric(results_corr$ci_high)
+
+results_corr$text_label <- with(results_corr, 
+                                      paste0("", round(r, 2), 
+                                             ", CI [", round(ci_low, 2), ", ", round(ci_high, 2), "]"))
+
+#make text_label more readable
+results_corr$text_label <- gsub("0,", "0.00", results_corr$text_label)
+results_corr$text_label <- gsub(", CI", "", results_corr$text_label)
+results_corr$text_label <- gsub(" CI", "", results_corr$text_label)
+
+#create study variable
+
+results_corr$study <- rep(3,nrow(results_corr))
+
+##### get coded effects and connect
+
+#read in from German format
+df_coded <- read.csv2(file = "data/correlations_CI.csv", stringsAsFactors = FALSE)
+
+#get relevant columns
+df_coded <- df_coded %>%
+  select(c(
+    variable,
+    study,
+    cor,
+    lwr.ci,
+    upr.ci
+  ))
+
+#round numeric data
+df_coded <- sapply(df_coded, function(x) if(is.numeric(x)) round(x, 3) else x)
+
+df_coded <- as.data.frame(df_coded)
+df_coded$cor <- as.numeric(df_coded$cor)
+df_coded$lwr.ci <- as.numeric(df_coded$lwr.ci)
+df_coded$upr.ci <- as.numeric(df_coded$upr.ci)
+
+
+#struggle with naming to align with current data
+df_coded <- df_coded %>%
+  mutate(parameter = case_when(
+    grepl("_SA$", variable) ~ "self_actualization",
+    grepl("_VI$", variable) ~ "vitality",
+    grepl("_CO$", variable) ~ "control_orientation",
+    grepl("_DP$", variable) ~ "depressive_symptoms",
+    grepl("_AN$", variable) ~ "trait_anxiety",
+    TRUE ~ NA_character_ # default case if none of the above conditions are met
+  ))
+
+#delete last three letters from variable and make rest to lower case and make some further adjustments
+df_coded <- df_coded %>%
+  mutate(variable = tolower(substr(variable, 1, nchar(variable) - 3)))
+
+df_coded$Label <- paste(df_coded$parameter, "-", df_coded$variable)
+
+df_coded$text_label <- with(df_coded, paste0("", round(cor, 2), 
+                                             ", CI [", round(lwr.ci, 2), ", ", round(upr.ci, 2), "]"))
+
+df_coded$Label <- gsub(" -", ":", df_coded$Label)
+df_coded$Label <- gsub("_", " ", df_coded$Label)
+
+#compute dimension variable
+df_coded <- df_coded %>%
+  mutate(dimension = case_when(
+    grepl("i$", variable) ~ "importance",
+    grepl("c$", variable) ~ "chances",
+    grepl("y$", variable) ~ "gpr",
+    TRUE ~ NA_character_  # Handles cases that don't match any condition
+  ))
+
+#reduce each to needed variables
+
+results_corr <- results_corr %>%
+  select(c(
+    study,
+    dimension,
+    Label,
+    text_label,
+    r,
+    ci_low,
+    ci_high
+  ))
+
+df_coded <- df_coded %>%
+  select(c(
+    study,
+    dimension,
+    Label,
+    text_label,
+    cor,
+    lwr.ci,
+    upr.ci
+  ))
+
+#unify names
+names(df_coded) <- names(results_corr)
+
+#combine data
+results_corr <- rbind(results_corr,df_coded)
+results_corr$study <- as.numeric(results_corr$study) #make study numeric
+
+#create unique label
+results_corr <- results_corr %>%
+  mutate(
+    study = as.factor(study), # Ensure 'study' is a factor
+    # Create a unique label for each combination of Label and Study for plotting
+    unique_label = interaction(Label, study, sep = " - ")) %>%
+  arrange(Label, study)
+
+```
+
+### importance
+
+```{r}
+corr_importance <- subset(results_corr, dimension == "importance")
+
+corr_importance$plot_order <- seq(1:nrow(corr_importance))
+
+corr_importance$study <- as.factor(corr_importance$study)
+
+#define lower bound of x-axis flexibly
+xlim_lo <- 1.05*min(corr_importance$ci_lo)
+xlim_hi <- 2.5*max(corr_importance$ci_high)
+
+# Step 2: Plotting
+ggplot(corr_importance, aes(x = r, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,12.5,
+                            14.5,16.5,18.5,20.5,
+                            23.5,26.5,29.5,32.5,
+                            34.5,36.5,38.5,40.5,44.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.05 * max(ci_high)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(xlim_lo,xlim_hi)
+
+#ggsave("forest_plot_corr_importance.pdf", width = 8, height = 10)
+```
+
+### chances
+
+```{r}
+corr_chance <- subset(results_corr, dimension == "chances")
+
+corr_chance$plot_order <- seq(1:nrow(corr_chance))
+
+corr_chance$study <- as.factor(corr_chance$study)
+
+#define lower bound of x-axis flexibly
+xlim_lo <- 1.05*min(corr_chance$ci_lo)
+xlim_hi <- 2.2*max(corr_chance$ci_high)
+
+max(corr_chance$ci_high)
+
+# Step 2: Plotting
+ggplot(corr_chance, aes(x = r, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,12.5,
+                            14.5,16.5,18.5,20.5,
+                            23.5,26.5,29.5,32.5,
+                            34.5,36.5,38.5,40.5,44.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.05 * max(ci_high)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(xlim_lo,xlim_hi)
+
+#ggsave("forest_plot_corr_chance.pdf", width = 8, height = 10)
+```
+
+### guiding principles
+
+```{r}
+corr_gpr <- subset(results_corr, dimension == "gpr")
+
+corr_gpr$plot_order <- seq(1:nrow(corr_gpr))
+
+corr_gpr$study <- as.factor(corr_gpr$study)
+
+#define lower bound of x-axis flexibly
+xlim_lo <- 1.05*min(corr_gpr$ci_lo)
+xlim_hi <- 2.2*max(corr_gpr$ci_high)
+
+max(corr_gpr$ci_high)
+
+# Step 2: Plotting
+ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,5.5,7.5,9.5,11.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.05 * max(ci_high)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(xlim_lo,xlim_hi)
+
+#ggsave("forest_plot_corr_chance.pdf", width = 8, height = 10)
+```
+
+
+
+
+
 
