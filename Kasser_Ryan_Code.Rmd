@@ -1361,6 +1361,8 @@ ggplot(results_corr_plot_data, aes(x = r, y = combined_label,color = dimension))
 ```
 
 # Combine effect comparison
+## t-tests
+### aspiration importance
 
 ```{r}
 #combine aspiration and guiding principle findings
@@ -1393,43 +1395,11 @@ results_ttest_plot_data$text_label <- with(results_ttest_plot_data,
                                       paste0("", round(d, 2), 
                                              ", CI [", round(d_CI_low, 2), ", ", round(d_CI_high, 2), "]"))
 
-ggplot(results_ttest_plot_data, aes(x = d, y = Label, color = dimension)) +
-  geom_point() +  # Plot the correlation coefficients as points
-  geom_errorbarh(aes(xmin = d_CI_low, xmax = d_CI_high), height = 0.2) +  # Draw horizontal error bars for CIs
-  geom_text(aes(label = text_label, x = 1.05 * max(d_CI_high)), hjust = 0, size = 3, nudge_x = 0.02, colour = "black") +
-  facet_wrap(~dimension, scales = "free_y", ncol = 1) +  # Group by 'dimension'
-  theme_minimal() +  # Use a minimal theme for a clean look
-  labs(x = "Correlation Coefficient (r)", y = "") +  # Label the x-axis
-  theme_classic()+
-  xlim(-0.3,.50)+
-  geom_vline(xintercept = 0, linetype = "dashed", color = "black")+
-  theme(axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size
-        legend.position = "none",  # Remove the legend
-        strip.background = element_blank(),  # Remove facet label background for a cleaner look
-        strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size for readability
-
 #ggsave("forest_plot_t_test.pdf", width = 8, height = 10)
 
-#make small forestplots:
 ##aspiration importance
 
 plot_asp_imp <- subset(results_ttest_plot_data, dimension == "importance")
-
-ggplot(plot_asp_imp, aes(x = d, y = Label)) +
-  geom_point() +  # Plot the correlation coefficients as points
-  geom_errorbarh(aes(xmin = d_CI_low, xmax = d_CI_high), height = 0.2) +  # Draw horizontal error bars for CIs
-  geom_text(aes(label = text_label, x = 1.05 * max(d_CI_high)), hjust = 0, size = 3, nudge_x = 0.02, colour = "black") +
-  #facet_wrap(~dimension, scales = "free_y", ncol = 1) +  # Group by 'dimension'
-  theme_minimal() +  # Use a minimal theme for a clean look
-  labs(x = "Correlation Coefficient (r)", y = "") +  # Label the x-axis
-  theme_classic()+
-  xlim(-0.3,.50)+
-  geom_vline(xintercept = 0, linetype = "dashed", color = "black")+
-  theme(axis.text.y = element_text(size = rel(0.8)),  # Adjust y-axis text size
-        legend.position = "none",  # Remove the legend
-        strip.background = element_blank(),  # Remove facet label background for a cleaner look
-        strip.text.y = element_text(size = rel(1.2)))  # Adjust facet label text size for readability
-
 
 ##### get coded effects and connect
 
@@ -1466,7 +1436,7 @@ df_coded <- df_coded %>%
     TRUE ~ NA_character_ # default case if none of the above conditions are met
   ))
 
-#exclude importances (aspiration)
+#exclude chances (aspiration)
 df_coded <- df_coded %>%
   filter(!grepl("^..C", variable)) 
 
@@ -1562,8 +1532,302 @@ ggplot(df_asp_imp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), 
   geom_text(aes(label = text_label, x = 1.05 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
   xlim(xlim_lo,2)
 
-#ggsave("forest_plot_t_test_small.pdf", width = 8, height = 10)
+#ggsave("forest_plot_t_test_importance.pdf", width = 8, height = 10)
 #ggsave("forest_plot_t_test_small.png", width = 8, height = 10)
 ```
 
+### aspiration chances
+
+```{r}
+plot_asp_cha <- subset(results_ttest_plot_data, dimension == "chances")
+
+##### get coded effects and connect
+
+#read in from German format
+df_coded <- read.csv2(file = "data/cohens_d_ttests.csv", stringsAsFactors = FALSE)
+
+#get relevant columns
+df_coded <- df_coded %>%
+  select(c(
+    variable,
+    study,
+    es,
+    ci.lo,
+    ci.hi
+  ))
+
+#round numeric data
+df_coded <- sapply(df_coded, function(x) if(is.numeric(x)) round(x, 3) else x)
+
+df_coded <- as.data.frame(df_coded)
+df_coded$es <- as.numeric(df_coded$es)
+df_coded$ci.lo <- as.numeric(df_coded$ci.lo)
+df_coded$ci.hi <- as.numeric(df_coded$ci.hi)
+
+
+#struggle with naming to align with current data
+df_coded <- df_coded %>%
+  mutate(parameter = case_when(
+    grepl("_SA$", variable) ~ "self_actualization",
+    grepl("_VI$", variable) ~ "vitality",
+    grepl("_CO$", variable) ~ "control_orientation",
+    grepl("_DP$", variable) ~ "depressive_symptoms",
+    grepl("_AN$", variable) ~ "trait_anxiety",
+    TRUE ~ NA_character_ # default case if none of the above conditions are met
+  ))
+
+#exclude importance (aspiration)
+df_coded <- df_coded %>%
+  filter(!grepl("^..I", variable)) 
+
+#exclude guiding principles
+df_coded <- df_coded %>%
+  filter(!grepl("^.._", variable)) 
+
+#delete last three letters from variable and make rest to lower case and make some further adjustments
+df_coded <- df_coded %>%
+  mutate(variable = tolower(substr(variable, 1, nchar(variable) - 3)))
+
+df_coded <- df_coded %>%
+  mutate(variable = paste0("comp_fsc_", tolower(variable)))
+
+df_coded$Label <- paste(df_coded$parameter, "-", df_coded$variable)
+
+df_coded$text_label <- with(df_coded, paste0("", round(es, 2), 
+                                             ", CI [", round(ci.lo, 2), ", ", round(ci.hi, 2), "]"))
+
+#select relevant columns from present data
+plot_asp_cha <- plot_asp_cha %>%
+  select(c(
+    Group,
+    d,
+    d_CI_low,
+    d_CI_high,
+    Parameter,
+    Label,
+    text_label
+  ))
+
+#introduce index
+plot_asp_cha$study <- rep(3,nrow(plot_asp_cha))
+
+#put at correct position
+plot_asp_cha <- plot_asp_cha %>%
+  select(1, study, everything())
+
+#unify names
+names(plot_asp_cha) <- names(df_coded)
+
+#combine data of all three studies
+df_asp_cha_all <- rbind(df_coded,plot_asp_cha)
+df_asp_cha_all$study <- as.numeric(df_asp_cha_all$study)
+
+df_asp_cha_all <- df_asp_cha_all %>% arrange(Label, study)
+
+#plotting
+
+# Step 1: Data Preparation
+df_asp_cha_all <- df_asp_cha_all %>%
+  mutate(
+    study = as.factor(study), # Ensure 'study' is a factor
+    # Create a unique label for each combination of Label and Study for plotting
+    unique_label = interaction(Label, study, sep = " - "),
+    # Arrange for plotting order, if necessary
+    plot_order = as.numeric(factor(unique_label, levels = unique(unique_label)))
+  ) %>%
+  arrange(Label, study)
+
+#make label more readable
+df_asp_cha_all$unique_label <- gsub(" - comp_fsc_", ": ", df_asp_cha_all$unique_label)
+df_asp_cha_all$unique_label <- gsub("_", " ", df_asp_cha_all$unique_label)
+
+#make data more readable
+df_asp_cha_all$text_label <- gsub("0,", "0.00", df_asp_cha_all$text_label)
+df_asp_cha_all$text_label <- gsub(", CI", "", df_asp_cha_all$text_label)
+df_asp_cha_all$text_label <- gsub(" CI", "", df_asp_cha_all$text_label)
+
+#define lower bound of x-axis flexibly
+xlim_lo <- 1.05*min(df_asp_cha_all$ci.lo)
+
+# Step 2: Plotting
+ggplot(df_asp_cha_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,11.5,13.5,15.5,
+                            18.5,21.5,24.5,26.5,28.5,30.5,
+                            32.5,34.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.05 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(xlim_lo,2)
+
+#ggsave("forest_plot_t_test_chances.pdf", width = 8, height = 10)
+
+```
+
+### guiding principles
+
+```{r}
+plot_asp_gp <- subset(results_ttest_plot_data, dimension == "gpr")
+
+##### get coded effects and connect
+
+#read in from German format
+df_coded <- read.csv2(file = "data/cohens_d_ttests.csv", stringsAsFactors = FALSE)
+
+#get relevant columns
+df_coded <- df_coded %>%
+  select(c(
+    variable,
+    study,
+    es,
+    ci.lo,
+    ci.hi
+  ))
+
+#round numeric data
+df_coded <- sapply(df_coded, function(x) if(is.numeric(x)) round(x, 3) else x)
+
+df_coded <- as.data.frame(df_coded)
+df_coded$es <- as.numeric(df_coded$es)
+df_coded$ci.lo <- as.numeric(df_coded$ci.lo)
+df_coded$ci.hi <- as.numeric(df_coded$ci.hi)
+
+
+#struggle with naming to align with current data
+df_coded <- df_coded %>%
+  mutate(parameter = case_when(
+    grepl("_SA$", variable) ~ "self_actualization",
+    grepl("_VI$", variable) ~ "vitality",
+    grepl("_CO$", variable) ~ "control_orientation",
+    grepl("_DP$", variable) ~ "depressive_symptoms",
+    grepl("_AN$", variable) ~ "trait_anxiety",
+    TRUE ~ NA_character_ # default case if none of the above conditions are met
+  ))
+
+#exclude importance (aspiration)
+df_coded <- df_coded %>%
+  filter(!grepl("^..I", variable)) 
+
+#exclude chances aspiration
+df_coded <- df_coded %>%
+  filter(!grepl("^..C", variable)) 
+
+#delete last three letters from variable and make rest to lower case and make some further adjustments
+df_coded <- df_coded %>%
+  mutate(variable = tolower(substr(variable, 1, nchar(variable) - 3)))
+
+df_coded$Label <- paste(df_coded$parameter, "-", df_coded$variable)
+
+df_coded$text_label <- with(df_coded, paste0("", round(es, 2), 
+                                             ", CI [", round(ci.lo, 2), ", ", round(ci.hi, 2), "]"))
+
+#select relevant columns from present data
+plot_asp_gp <- plot_asp_gp %>%
+  select(c(
+    Group,
+    d,
+    d_CI_low,
+    d_CI_high,
+    Parameter,
+    Label,
+    text_label
+  ))
+
+#introduce index
+plot_asp_gp$study <- rep(3,nrow(plot_asp_gp))
+
+#put at correct position
+plot_asp_gp <- plot_asp_gp %>%
+  select(1, study, everything())
+
+#unify names
+names(plot_asp_gp) <- names(df_coded)
+
+#combine data of all three studies
+df_asp_gp_all <- rbind(df_coded,plot_asp_gp)
+df_asp_gp_all$study <- as.numeric(df_asp_gp_all$study)
+
+#df_asp_gp_all <- df_asp_gp_all %>% arrange(Label, study)
+
+#plotting
+
+# Step 1: Data Preparation
+df_asp_gp_all <- df_asp_gp_all %>%
+  mutate(
+    study = as.factor(study), # Ensure 'study' is a factor
+    # Create a unique label for each combination of Label and Study for plotting
+    unique_label = interaction(Label, study, sep = " - ")) %>%
+  arrange(Label, study)
+
+#make label more readable
+df_asp_gp_all$unique_label <- gsub(" - comp_money_", ": ", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("_", " ", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("fa ", "family ", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("we ", "welfare ", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("ion -", "ion:", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("oms -", "oms:", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("ety -", "ety:", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("ity -", "ity:", df_asp_gp_all$unique_label)
+
+df_asp_gp_all <- df_asp_gp_all %>%
+  arrange(unique_label, study)
+
+df_asp_gp_all$plot_order <- seq(1:nrow(df_asp_gp_all))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#make data more readable
+df_asp_gp_all$text_label <- gsub("0,", "0.00", df_asp_gp_all$text_label)
+df_asp_gp_all$text_label <- gsub(", CI", "", df_asp_gp_all$text_label)
+df_asp_gp_all$text_label <- gsub(" CI", "", df_asp_gp_all$text_label)
+
+#define lower bound of x-axis flexibly
+xlim_lo <- 1.05*min(df_asp_gp_all$ci.lo)
+
+# Step 2: Plotting
+ggplot(df_asp_gp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "bottom",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(6.5,10.5,16.5,20.5,24.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.05 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(xlim_lo,2)
+
+```
 
