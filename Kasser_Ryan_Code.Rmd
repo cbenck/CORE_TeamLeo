@@ -448,70 +448,194 @@ df_chance %>%
 ### outcome by gender and aspiration interactions
 ```{r}
 #this chunk runs all 40 proposed interction models by gender and aspirations
-#the results are stored in 'df_results_gender_interactions'
-#the significant ones are filtered and stored in a second dataframe called 'df_results_gender_interactions_sign'
 
+#select needed variables
+df_interactions <- df %>%
+  select(mean_asp_sai,mean_asp_afi,mean_asp_cfi,mean_asp_fsi,
+         mean_asp_overall_importance,
+         mean_asp_sac,mean_asp_afc,mean_asp_cfc,mean_asp_fsc,
+         mean_asp_overall_chances,
+         mean_self_actualization,
+         mean_vitality,
+         mean_control_orientation,
+         mean_depressive_symptoms,
+         mean_trait_anxiety,
+         gender)
 
-extract_full_name <- function(string) {
-    parts <- unlist(strsplit(string, "_"))
-    # Assuming the dependent variable name is the first three parts of the split
-    full_name <- paste(parts[1:3], collapse = "_")
-    return(full_name)
-}
+#transform gender to factor
+df_interactions$gender <- as.factor(df_interactions$gender)
 
-run_models <- function(dependent_var, data) {
-  models <- list()
-  interactions_i <- c("mean_asp_sai", "mean_asp_afi", "mean_asp_cfi", "mean_asp_fsi")
-  interactions_c <- c("mean_asp_sac", "mean_asp_afc", "mean_asp_cfc", "mean_asp_fsc")
-  
-  # Pair overall_importance with interactions ending in 'i'
-  for (inter in interactions_i) {
-    model_formula <- as.formula(paste(dependent_var, "~ mean_asp_overall_importance +", inter, "*gender"))
-    model_name <- paste(dependent_var, "mean_asp_overall_importance", inter, sep="_")
-    models[[model_name]] <- lm(model_formula, data = data)
-  }
+#self-actualization: importance
+m1 <- lm(mean_self_actualization ~ mean_asp_overall_importance +
+           mean_asp_sai*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
 
-  # Pair overall_chances with interactions ending in 'c'
-  for (inter in interactions_c) {
-    model_formula <- as.formula(paste(dependent_var, "~ mean_asp_overall_chances +", inter, "*gender"))
-    model_name <- paste(dependent_var, "mean_asp_overall_chances", inter, sep="_")
-    models[[model_name]] <- lm(model_formula, data = data)
-  }
-  
-  return(models)
-}
+m2 <- lm(mean_self_actualization ~ mean_asp_overall_importance +
+           mean_asp_afi*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
 
-dependent_vars <- c("mean_self_actualization","mean_vitality","mean_control_orientation", "mean_depressive_symptoms", "mean_trait_anxiety")
-all_models <- list()
+m3 <- lm(mean_self_actualization ~ mean_asp_overall_importance +
+           mean_asp_cfi*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
 
-for (var in dependent_vars) {
-  all_models[[var]] <- run_models(var, df)
-}
+m4 <- lm(mean_self_actualization ~ mean_asp_overall_importance +
+           mean_asp_fsi*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
 
-model_summaries <- list()
+#self-actualization: chances
+m1 <- lm(mean_self_actualization ~ mean_asp_overall_chances +
+           mean_asp_sac*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
 
-for (var in names(all_models)) {
-  model_summaries[[var]] <- lapply(all_models[[var]], broom::tidy)
-}
+m2 <- lm(mean_self_actualization ~ mean_asp_overall_chances +
+           mean_asp_afc*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
 
-results_df <- data.frame()
+m3 <- lm(mean_self_actualization ~ mean_asp_overall_chances +
+           mean_asp_cfc*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
 
-for (var in names(all_models)) {
-    for (model_name in names(all_models[[var]])) {
-        model_summary <- broom::tidy(all_models[[var]][[model_name]])
-        model_summary$model <- model_name  # Add the model name directly here
-        results_df <- rbind(results_df, model_summary)
-    }
-}
+m4 <- lm(mean_self_actualization ~ mean_asp_overall_chances +
+           mean_asp_fsc*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
 
-filtered_df <- results_df[grepl(":gender", results_df$term), ]
+#vitality: importance
+m1 <- lm(mean_vitality ~ mean_asp_overall_importance +
+           mean_asp_sai*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
 
-filtered_df$model <- sapply(filtered_df$model, extract_full_name)
+m2 <- lm(mean_vitality ~ mean_asp_overall_importance +
+           mean_asp_afi*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
 
-df_results_gender_interactions <- filtered_df
+m3 <- lm(mean_vitality ~ mean_asp_overall_importance +
+           mean_asp_cfi*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
 
-#find significant interactions
-df_results_gender_interactions_sign <- subset(df_results_gender_interactions, p.value < .05)
+m4 <- lm(mean_vitality ~ mean_asp_overall_importance +
+           mean_asp_fsi*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
+#vitality: chances
+m1 <- lm(mean_vitality ~ mean_asp_overall_chances +
+           mean_asp_sac*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_vitality ~ mean_asp_overall_chances +
+           mean_asp_afc*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_vitality ~ mean_asp_overall_chances +
+           mean_asp_cfc*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_vitality ~ mean_asp_overall_chances +
+           mean_asp_fsc*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
+#control-orientation: importance
+m1 <- lm(mean_control_orientation ~ mean_asp_overall_importance +
+           mean_asp_sai*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_control_orientation ~ mean_asp_overall_importance +
+           mean_asp_afi*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_control_orientation ~ mean_asp_overall_importance +
+           mean_asp_cfi*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_control_orientation ~ mean_asp_overall_importance +
+           mean_asp_fsi*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
+#control-orientation: chances
+m1 <- lm(mean_control_orientation ~ mean_asp_overall_chances +
+           mean_asp_sac*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_control_orientation ~ mean_asp_overall_chances +
+           mean_asp_afc*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_control_orientation ~ mean_asp_overall_chances +
+           mean_asp_cfc*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_control_orientation ~ mean_asp_overall_chances +
+           mean_asp_fsc*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
+#depressive-symptoms: importance
+m1 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance +
+           mean_asp_sai*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance +
+           mean_asp_afi*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance +
+           mean_asp_cfi*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_depressive_symptoms ~ mean_asp_overall_importance +
+           mean_asp_fsi*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
+#depressive-symptoms: chances
+m1 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances +
+           mean_asp_sac*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances +
+           mean_asp_afc*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances +
+           mean_asp_cfc*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_depressive_symptoms ~ mean_asp_overall_chances +
+           mean_asp_fsc*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
+#trait-anxiety: importance
+m1 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance +
+           mean_asp_sai*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance +
+           mean_asp_afi*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance +
+           mean_asp_cfi*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_trait_anxiety ~ mean_asp_overall_importance +
+           mean_asp_fsi*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+summary(m4)
+
+#trait-anxiety: chances
+m1 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances +
+           mean_asp_sac*gender,data = df_interactions)
+tab_model(m1,show.std = TRUE)
+
+m2 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances +
+           mean_asp_afc*gender,data = df_interactions)
+tab_model(m2,show.std = TRUE)
+
+m3 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances +
+           mean_asp_cfc*gender,data = df_interactions)
+tab_model(m3,show.std = TRUE)
+
+m4 <- lm(mean_trait_anxiety ~ mean_asp_overall_chances +
+           mean_asp_fsc*gender,data = df_interactions)
+tab_model(m4,show.std = TRUE)
+
 ```
 
 ## Primary analysis
