@@ -1624,6 +1624,10 @@ df_asp_imp_all <- df_asp_imp_all %>%
 #make label more readable
 df_asp_imp_all$unique_label <- gsub(" - comp_fsi_", ": ", df_asp_imp_all$unique_label)
 df_asp_imp_all$unique_label <- gsub("_", " ", df_asp_imp_all$unique_label)
+df_asp_imp_all$unique_label <- gsub("control orientation", "cont. orient.", df_asp_imp_all$unique_label)
+df_asp_imp_all$unique_label <- gsub("depressive symptoms", "depr. symp.", df_asp_imp_all$unique_label)
+df_asp_imp_all$unique_label <- gsub("actualization", "act.", df_asp_imp_all$unique_label)
+df_asp_imp_all$unique_label <- gsub("anxiety", "anx.", df_asp_imp_all$unique_label)
 
 #make data more readable
 df_asp_imp_all$text_label <- gsub("0,", "0.00", df_asp_imp_all$text_label)
@@ -1657,7 +1661,7 @@ ggplot(df_asp_imp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), 
   xlim(xlim_lo,2)
 
 #ggsave("forest_plot_t_test_importance.pdf", width = 8, height = 10)
-#ggsave("forest_plot_t_test_importance.png", width = 8, height = 10)
+#ggsave("forest_plot_t_test_importance.png", width = 7, height = 10)
 ```
 
 ### aspiration chances
@@ -1764,6 +1768,10 @@ df_asp_cha_all <- df_asp_cha_all %>%
 #make label more readable
 df_asp_cha_all$unique_label <- gsub(" - comp_fsc_", ": ", df_asp_cha_all$unique_label)
 df_asp_cha_all$unique_label <- gsub("_", " ", df_asp_cha_all$unique_label)
+df_asp_cha_all$unique_label <- gsub("control orientation", "cont. orient.", df_asp_cha_all$unique_label)
+df_asp_cha_all$unique_label <- gsub("depressive symptoms", "depr. symp.", df_asp_cha_all$unique_label)
+df_asp_cha_all$unique_label <- gsub("actualization", "act.", df_asp_cha_all$unique_label)
+df_asp_cha_all$unique_label <- gsub("anxiety", "anx.", df_asp_cha_all$unique_label)
 
 #make data more readable
 df_asp_cha_all$text_label <- gsub("0,", "0.00", df_asp_cha_all$text_label)
@@ -1797,8 +1805,7 @@ ggplot(df_asp_cha_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), 
   xlim(xlim_lo,2)
 
 #ggsave("forest_plot_t_test_chances.pdf", width = 8, height = 10)
-#ggsave("forest_plot_t_test_chances.png", width = 8, height = 10)
-
+#ggsave("forest_plot_t_test_chances.png", width = 7, height = 10)
 ```
 
 ### guiding principles
@@ -1905,6 +1912,10 @@ df_asp_gp_all$unique_label <- gsub("ion -", "ion:", df_asp_gp_all$unique_label)
 df_asp_gp_all$unique_label <- gsub("oms -", "oms:", df_asp_gp_all$unique_label)
 df_asp_gp_all$unique_label <- gsub("ety -", "ety:", df_asp_gp_all$unique_label)
 df_asp_gp_all$unique_label <- gsub("ity -", "ity:", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("control orientation", "cont. orient.", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("depressive symptoms", "depr. symp.", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("actualization", "act.", df_asp_gp_all$unique_label)
+df_asp_gp_all$unique_label <- gsub("anxiety", "anx.", df_asp_gp_all$unique_label)
 
 df_asp_gp_all <- df_asp_gp_all %>%
   arrange(unique_label, study)
@@ -1941,9 +1952,7 @@ ggplot(df_asp_gp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), c
   xlim(xlim_lo,2)
 
 #ggsave("forest_plot_t_test_guiding.pdf", width = 8, height = 10)
-#ggsave("forest_plot_t_test_guiding.png", width = 8, height = 10)
-
-
+#ggsave("forest_plot_t_test_guiding.png", width = 7, height = 7)
 ```
 
 ## correlations
@@ -2099,6 +2108,11 @@ results_corr <- results_corr %>%
     unique_label = interaction(Label, study, sep = " - ")) %>%
   arrange(Label, study)
 
+results_corr$unique_label <- gsub("control orientation", "cont. orient.", results_corr$unique_label)
+results_corr$unique_label <- gsub("depressive symptoms", "depr. symp.", results_corr$unique_label)
+results_corr$unique_label <- gsub("actualization", "act.", results_corr$unique_label)
+results_corr$unique_label <- gsub("anxiety", "anx.", results_corr$unique_label)
+
 ```
 
 ### importance
@@ -2139,7 +2153,7 @@ ggplot(corr_importance, aes(x = r, y = reorder(unique_label, desc(plot_order)), 
   xlim(xlim_lo,xlim_hi)
 
 #ggsave("forest_plot_corr_importance.pdf", width = 8, height = 10)
-#ggsave("forest_plot_corr_importance.png", width = 8, height = 10)
+#ggsave("forest_plot_corr_importance.png", width = 7, height = 10)
 
 ```
 
@@ -2183,8 +2197,7 @@ ggplot(corr_chance, aes(x = r, y = reorder(unique_label, desc(plot_order)), colo
   xlim(xlim_lo,xlim_hi)
 
 #ggsave("forest_plot_corr_chance.pdf", width = 8, height = 10)
-#ggsave("forest_plot_corr_chance.png", width = 8, height = 10)
-
+#ggsave("forest_plot_corr_chance.png", width = 7, height = 10)
 ```
 
 ### guiding principles
@@ -2224,7 +2237,7 @@ ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color =
   xlim(xlim_lo,xlim_hi)
 
 #ggsave("forest_plot_corr_gpr.pdf", width = 8, height = 10)
-#ggsave("forest_plot_corr_gpr.png", width = 8, height = 10)
+#ggsave("forest_plot_corr_gpr.png", width = 8, height = 4)
 ```
 
 
