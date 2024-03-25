@@ -1100,6 +1100,24 @@ hist(as.numeric(results_corr_aspiration$r))
 
 ### group comparisons (assessment of relative centrality)
 ```{r}
+#function to compute SDs by group
+calculate_group_sd <- function(data, group_var, numeric_var) {
+  # Ensure the group variable is a factor and adjust levels to start from 1
+  data <- data %>%
+    mutate(!!sym(group_var) := factor(!!sym(group_var), levels = c(0, 1), labels = c("1", "2")))
+  
+  # Calculate SDs and pivot to get them in one row
+  group_stats <- data %>%
+    group_by(!!sym(group_var)) %>%
+    summarise(
+      SD = sd(!!sym(numeric_var), na.rm = TRUE),
+      .groups = 'drop'
+    ) %>%
+    pivot_wider(names_prefix = "SD_Group_", names_from = !!sym(group_var), values_from = SD)
+  
+  return(group_stats)
+}
+
 #scale all aspiration index means
 df_centr_asp <- df %>%
   mutate(across(starts_with("mean_asp"), 
@@ -1120,53 +1138,133 @@ df_centr_asp <- df_centr_asp %>% mutate(comp_fsc_cfc = if_else(mean_asp_fsc_z > 
 #t-tests
 ##self-actualization - importance
 test_1 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsi_afi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_afi", "mean_self_actualization")
+test_1 <- cbind(test_1, group_stats)
+
 test_2 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsi_sai, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_sai", "mean_self_actualization")
+test_2 <- cbind(test_2, group_stats)
+
 test_3 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsi_cfi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_cfi", "mean_self_actualization")
+test_3 <- cbind(test_3, group_stats)
 
 ##self-actualization - chances
 test_4 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsc_afc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_afc", "mean_self_actualization")
+test_4 <- cbind(test_4, group_stats)
+
 test_5 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsc_sac, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_sac", "mean_self_actualization")
+test_5 <- cbind(test_5, group_stats)
+
 test_6 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_fsc_cfc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_cfc", "mean_self_actualization")
+test_6 <- cbind(test_6, group_stats)
 
 ##vitality - importance
 test_7 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsi_afi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_afi", "mean_vitality")
+test_7 <- cbind(test_7, group_stats)
+
 test_8 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsi_sai, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_sai", "mean_vitality")
+test_8 <- cbind(test_8, group_stats)
+
 test_9 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsi_cfi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_cfi", "mean_vitality")
+test_9 <- cbind(test_9, group_stats)
 
 ##vitality - chances
 test_10 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsc_afc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_afc", "mean_vitality")
+test_10 <- cbind(test_10, group_stats)
+
 test_11 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsc_sac, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_sac", "mean_vitality")
+test_11 <- cbind(test_11, group_stats)
+
 test_12 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_fsc_cfc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_cfc", "mean_vitality")
+test_12 <- cbind(test_12, group_stats)
 
 ##control-orientation - importance
 test_13 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsi_afi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_afi", "mean_control_orientation")
+test_13 <- cbind(test_13, group_stats)
+
 test_14 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsi_sai, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_sai", "mean_control_orientation")
+test_14 <- cbind(test_14, group_stats)
+
 test_15 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsi_cfi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_cfi", "mean_control_orientation")
+test_15 <- cbind(test_15, group_stats)
 
 ##control-orientation - chances
 test_16 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsc_afc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_afc", "mean_control_orientation")
+test_16 <- cbind(test_16, group_stats)
+
 test_17 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsc_sac, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_sac", "mean_control_orientation")
+test_17 <- cbind(test_17, group_stats)
+
 test_18 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_fsc_cfc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_cfc", "mean_control_orientation")
+test_18 <- cbind(test_18, group_stats)
 
 ##depressive symptoms - importance
 test_19 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsi_afi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_afi", "mean_depressive_symptoms")
+test_19 <- cbind(test_19, group_stats)
+
 test_20 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsi_sai, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_sai", "mean_depressive_symptoms")
+test_20 <- cbind(test_20, group_stats)
+
 test_21 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsi_cfi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_cfi", "mean_depressive_symptoms")
+test_21 <- cbind(test_21, group_stats)
 
 ##depressive symptoms - chances
 test_22 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsc_afc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_afc", "mean_depressive_symptoms")
+test_22 <- cbind(test_22, group_stats)
+
 test_23 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsc_sac, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_sac", "mean_depressive_symptoms")
+test_23 <- cbind(test_23, group_stats)
+
 test_24 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_fsc_cfc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_cfc", "mean_depressive_symptoms")
+test_24 <- cbind(test_24, group_stats)
 
-##trait anxiety - importance
+# Trait Anxiety - Importance
 test_25 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_afi, data = df_centr_asp)))
-test_26 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai, data = df_centr_asp)))
-test_27 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_afi", "mean_trait_anxiety")
+test_25 <- cbind(test_25, group_stats)
 
-##trait anxiety - chances
+test_26 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_sai, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_sai", "mean_trait_anxiety")
+test_26 <- cbind(test_26, group_stats)
+
+test_27 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsi_cfi, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsi_cfi", "mean_trait_anxiety")
+test_27 <- cbind(test_27, group_stats)
+
+# Trait Anxiety - Chances
 test_28 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_afc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_afc", "mean_trait_anxiety")
+test_28 <- cbind(test_28, group_stats)
+
 test_29 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_sac, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_sac", "mean_trait_anxiety")
+test_29 <- cbind(test_29, group_stats)
+
 test_30 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_fsc_cfc, data = df_centr_asp)))
+group_stats <- calculate_group_sd(df_centr_asp, "comp_fsc_cfc", "mean_trait_anxiety")
+test_30 <- cbind(test_30, group_stats)
 
 #combine results from all tests
 results_t_test_aspiration <- do.call(rbind, list(test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10, 
@@ -1360,6 +1458,24 @@ ggplot(corr_gpr_plot_data, aes(x = r, y = combined_label)) +
 
 ### guiding principles comparisons
 ```{r}
+#function to compute SDs by group
+calculate_group_sd <- function(data, group_var, numeric_var) {
+  # Ensure the group variable is a factor and adjust levels to start from 1
+  data <- data %>%
+    mutate(!!sym(group_var) := factor(!!sym(group_var), levels = c(0, 1), labels = c("1", "2")))
+  
+  # Calculate SDs and pivot to get them in one row
+  group_stats <- data %>%
+    group_by(!!sym(group_var)) %>%
+    summarise(
+      SD = sd(!!sym(numeric_var), na.rm = TRUE),
+      .groups = 'drop'
+    ) %>%
+    pivot_wider(names_prefix = "SD_Group_", names_from = !!sym(group_var), values_from = SD)
+  
+  return(group_stats)
+}
+
 #scale all guiding principles means
 df_centr_gpr <- df %>%
   mutate(across(starts_with("mean_gpr"), 
@@ -1374,23 +1490,48 @@ df_centr_gpr <- df_centr_gpr %>% mutate(comp_money_welfare = if_else(mean_gpr_mo
 #t-tests
 ##self-actualization
 test_1 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_money_family,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_family", "mean_self_actualization")
+test_1 <- cbind(test_1, group_stats)
+
 test_2 <- as.data.frame(report::report(t.test(mean_self_actualization ~ comp_money_welfare,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_welfare", "mean_self_actualization")
+test_2 <- cbind(test_2, group_stats)
 
 ##vitality
 test_3 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_money_family,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_family", "mean_vitality")
+test_3 <- cbind(test_3, group_stats)
+
 test_4 <- as.data.frame(report::report(t.test(mean_vitality ~ comp_money_welfare,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_welfare", "mean_vitality")
+test_4 <- cbind(test_4, group_stats)
 
 ##control orientation
 test_5 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_money_family,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_family", "mean_control_orientation")
+test_5 <- cbind(test_5, group_stats)
+
 test_6 <- as.data.frame(report::report(t.test(mean_control_orientation ~ comp_money_welfare,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_welfare", "mean_control_orientation")
+test_6 <- cbind(test_6, group_stats)
 
 ##depressive symptoms
 test_7 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_money_family,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_family", "mean_depressive_symptoms")
+test_7 <- cbind(test_7, group_stats)
+
 test_8 <- as.data.frame(report::report(t.test(mean_depressive_symptoms ~ comp_money_welfare,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_welfare", "mean_depressive_symptoms")
+test_8 <- cbind(test_8, group_stats)
 
 ##trait anxiety
 test_9 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_money_family,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_family", "mean_trait_anxiety")
+test_9 <- cbind(test_9, group_stats)
+
 test_10 <- as.data.frame(report::report(t.test(mean_trait_anxiety ~ comp_money_welfare,data = df_centr_gpr)))
+group_stats <- calculate_group_sd(df_centr_gpr, "comp_money_welfare", "mean_trait_anxiety")
+test_10 <- cbind(test_10, group_stats)
 
 #combine results from all tests
 results_t_test_gpr <- do.call(rbind, list(test_1, test_2, test_3, test_4, test_5, test_6, test_7, test_8, test_9, test_10))
@@ -2240,8 +2381,15 @@ ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color =
 #ggsave("forest_plot_corr_gpr.png", width = 8, height = 4)
 ```
 
+```{r}
+#combine t-test df again for summary effect
+df_ttest <- rbind(results_t_test_aspiration,results_t_test_gpr)
 
-
+#prepare correlation results for summary effect
+df_corr <- subset(results_corr, study == 3)
+df_corr$n <- nrow(df)
+df_corr$ES_id <- seq(1:nrow(df_corr))
+```
 
 
 
