@@ -2384,12 +2384,22 @@ ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color =
 ```{r}
 #combine t-test df again for summary effect
 df_ttest <- rbind(results_t_test_aspiration,results_t_test_gpr)
+df_ttest$ES_id <- seq(1:nrow(df_ttest))
 
 #prepare correlation results for summary effect
 df_corr <- subset(results_corr, study == 3)
 df_corr$n <- nrow(df)
 df_corr$ES_id <- seq(1:nrow(df_corr))
 ```
+
+compute new summary effects by ttest and corr
+add code for computation
+
+
+
+
+
+
 
 
 
