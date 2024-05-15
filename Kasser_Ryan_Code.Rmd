@@ -2385,6 +2385,8 @@ ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color =
 #combine t-test df again for summary effect
 df_ttest <- rbind(results_t_test_aspiration,results_t_test_gpr)
 df_ttest$ES_id <- seq(1:nrow(df_ttest))
+df_ttest$n <- nrow(df)
+nrow(df$ == "1")  ## ==>> returns NULL
 
 #prepare correlation results for summary effect
 df_corr <- subset(results_corr, study == 3)
@@ -2392,10 +2394,92 @@ df_corr$n <- nrow(df)
 df_corr$ES_id <- seq(1:nrow(df_corr))
 ```
 
-compute new summary effects by ttest and corr
-add code for computation
+# Overall Effect analysis for new Study
+All following calculations are conducted using the metafor package.
+
+## Summary effect T-test's
+
+For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects compareable.
+
+We then add a running id to each collumn.
+
+```{r}
+#---- summary effect t tests ---- 
+df_ttest$es <- abs(df_ttest$d) #using absolute to turn all effects positive, add subset for absolute to only flip variables which need it.
+
+cohen_d_with_stats <- function(Mean_Group1, Mean_Group2, SD_Group_1, SD_Group_2, n1, n2) {
+  pooled_sd <- sqrt(((n1 - 1) * SD_Group_1^2 + (n2 - 1) * SD_Group_2^2) / (n1 + n2 - 2))
+  d_d <- (Mean_Group1 - Mean_Group2) / pooled_sd
+  var_d <- (n1 + n2) / (n1 * n2) + (d_d^2 / (2 * (n1 + n2 - 2)))
+  se_d <- sqrt(var_d)
+  ci_95_low <- d_d - 1.96 * se_d
+  ci_95_high <- d_d + 1.96 * se_d
+  return(c(d_d, var_d, se_d, ci_95_low, ci_95_high))
+}
+
+# Apply the function to each row
+results_var_d <- apply(df_ttest, 1, function(x) cohen_d_with_stats(as.numeric(x['Mean_Group_1']), 
+                                                       as.numeric(x['Mean_Group_2']), 
+                                                       as.numeric(x['SD_Group1']), 
+                                                       as.numeric(x['SD_Group2']), 
+                                                       as.numeric(x['n'])))
+
+# Converting results to a dataframe
+results_var_d <- as.data.frame(t(results_var_d))
+
+df_ttest$var <- results_var_d$var_d
+  
+  
+```
+
+Following this we use a Meta-Analysis via Multivariate/Multilevel Linear (Mixed-Effects) Models to calculate a model for the overall effect. Which we then look into using the summary function.
+
+```{r}
+overall.ma4<-rma.mv(yi=d,
+                    V=var_d,
+                    #random=list(~1|study/es.id),
+                    tdist=TRUE,
+                    method="REML",
+                    slab=study,
+                    data=df_ttest)	
+
+summary(overall.ma4)
+```
 
 
+## Summary effect correlation's
+
+For final data preparation we use the abs function to turn all effects into the same (positive) direction, as to make the effects comparable.
+
+We then add a running id to each column.
+
+```{r}
+#---- summary effect cor ----
+
+df$corr <- abs(df$corr) #using absolute to turn all effects positive, add subset for absolute to only flip variables which need it.
+```
+
+For the analysis using the correlation data we need to add a variable containing the Variance of the correlation to do this we use the escalc function of the metafor package. Which uses the correlations and sample size to determine the variance which will then be added back into the dataset.
+
+```{r}
+x <- escalc(measure="COR", ri=df_corr$r, ni=df_corr$n) #calc variance of correlations
+df_corr$var <- x$vi
+```
+
+Following this we use a Meta-Analysis via Multivariate/Multilevel Linear (Mixed-Effects) Models to calculate a model for the overall effect. Which we then look into using the summary function.
+
+```{r}
+overall.ma5<-rma.mv(yi=r,
+                    V=var,
+                    #random=list(~1|study/ES_id),
+                    tdist=TRUE,
+                    method="REML",
+                    slab=study,
+                    data=df_corr)	
+
+summary(overall.ma5)
+
+```
 
 
 
