@@ -1106,14 +1106,19 @@ calculate_group_sd <- function(data, group_var, numeric_var) {
   data <- data %>%
     mutate(!!sym(group_var) := factor(!!sym(group_var), levels = c(0, 1), labels = c("1", "2")))
   
-  # Calculate SDs and pivot to get them in one row
+  # Calculate SDs and group sizes, then pivot to get them in one row
   group_stats <- data %>%
     group_by(!!sym(group_var)) %>%
     summarise(
       SD = sd(!!sym(numeric_var), na.rm = TRUE),
+      Size = n(),  # Calculate group size
       .groups = 'drop'
     ) %>%
-    pivot_wider(names_prefix = "SD_Group_", names_from = !!sym(group_var), values_from = SD)
+    pivot_wider(
+      names_from = !!sym(group_var),
+      values_from = c(SD, Size),
+      names_sep = "_"
+    )
   
   return(group_stats)
 }
@@ -1464,14 +1469,19 @@ calculate_group_sd <- function(data, group_var, numeric_var) {
   data <- data %>%
     mutate(!!sym(group_var) := factor(!!sym(group_var), levels = c(0, 1), labels = c("1", "2")))
   
-  # Calculate SDs and pivot to get them in one row
+  # Calculate SDs and group sizes, then pivot to get them in one row
   group_stats <- data %>%
     group_by(!!sym(group_var)) %>%
     summarise(
       SD = sd(!!sym(numeric_var), na.rm = TRUE),
+      Size = n(),  # Calculate group size
       .groups = 'drop'
     ) %>%
-    pivot_wider(names_prefix = "SD_Group_", names_from = !!sym(group_var), values_from = SD)
+    pivot_wider(
+      names_from = !!sym(group_var),
+      values_from = c(SD, Size),
+      names_sep = "_"
+    )
   
   return(group_stats)
 }
@@ -2385,8 +2395,8 @@ ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color =
 #combine t-test df again for summary effect
 df_ttest <- rbind(results_t_test_aspiration,results_t_test_gpr)
 df_ttest$ES_id <- seq(1:nrow(df_ttest))
-df_ttest$n <- nrow(df)
-nrow(df$ == "1")  ## ==>> returns NULL
+#df_ttest$n <- nrow(df)
+#nrow(df$ == "1")  ## ==>> returns NULL
 
 #prepare correlation results for summary effect
 df_corr <- subset(results_corr, study == 3)
