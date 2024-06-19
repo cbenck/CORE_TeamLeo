@@ -1813,6 +1813,32 @@ ggplot(df_asp_imp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), 
 
 #ggsave("forest_plot_t_test_importance.pdf", width = 8, height = 10)
 #ggsave("forest_plot_t_test_importance.png", width = 7, height = 10)
+
+###### only tests with financial from the current data ######
+
+df_asp_imp_pub <- subset(df_asp_imp_all, study == 3)
+#modify label
+df_asp_imp_pub$unique_label <- substr(df_asp_imp_pub$unique_label, 1, nchar(df_asp_imp_pub$unique_label) - 3)
+
+pub_plot_1 <- ggplot(df_asp_imp_pub, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,12.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.5)
 ```
 
 ### aspiration chances
@@ -1957,6 +1983,32 @@ ggplot(df_asp_cha_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), 
 
 #ggsave("forest_plot_t_test_chances.pdf", width = 8, height = 10)
 #ggsave("forest_plot_t_test_chances.png", width = 7, height = 10)
+
+###### only tests with financial from the current data ######
+
+df_asp_cha_pub <- subset(df_asp_cha_all, study == 3)
+#modify label
+df_asp_cha_pub$unique_label <- substr(df_asp_cha_pub$unique_label, 1, nchar(df_asp_cha_pub$unique_label) - 3)
+
+pub_plot_2 <- ggplot(df_asp_cha_pub, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point() + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 12),
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 12),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,12.5), linetype = 2)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.5)
 ```
 
 ### guiding principles
@@ -2104,6 +2156,41 @@ ggplot(df_asp_gp_all, aes(x = es, y = reorder(unique_label, desc(plot_order)), c
 
 #ggsave("forest_plot_t_test_guiding.pdf", width = 8, height = 10)
 #ggsave("forest_plot_t_test_guiding.png", width = 7, height = 7)
+
+###### only tests with financial from the current data ######
+
+df_asp_gp_pub <- subset(df_asp_gp_all, study == 3)
+#modify label
+df_asp_gp_pub$unique_label <- substr(df_asp_gp_pub$unique_label, 1, nchar(df_asp_gp_pub$unique_label) - 3)
+
+pub_plot_3 <- ggplot(df_asp_gp_pub, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point(size = 5) + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2, size = 3) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic(base_size = 70) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 40),
+    legend.text = element_text(size = 40),
+    legend.title = element_text(size = 40),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0, linewidth = 3)+
+  geom_hline(yintercept = c(2.5,4.5,6.5,8.5), linetype = 2, linewidth = 3)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.7)
+
+library(ggpubr)
+pub_plot_comp<-ggarrange(pub_plot_1, pub_plot_2 , pub_plot_3,
+                              font.label = list(size = 70),
+                             labels = c("A", "B", "C"),ncol = 2, nrow =2,common.legend = FALSE)
+
+pub_plot_comp
+pub_plot_comp%>%
+  ggsave(filename="pub_plot_comp.jpg",width = 40, height = 30)
 ```
 
 ## correlations
