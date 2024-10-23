@@ -22,6 +22,7 @@ library(sjPlot) # 2.8.14
 library(broom) # 1.0.5
 library(writexl)
 library(forcats)
+library(ggpubr)
 ```
 
 # Load Data
@@ -1821,24 +1822,24 @@ df_asp_imp_pub <- subset(df_asp_imp_all, study == 3)
 df_asp_imp_pub$unique_label <- substr(df_asp_imp_pub$unique_label, 1, nchar(df_asp_imp_pub$unique_label) - 3)
 
 pub_plot_1 <- ggplot(df_asp_imp_pub, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
-  geom_point() + # Plot the effect sizes as points
-  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
+  geom_point(size = 5) + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2, size = 3) + # Add error bars for confidence intervals
   scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
     labs(x = "", y = "") +
-  theme_classic() +
+  theme_classic(base_size = 70) +
   theme(
     legend.position = "none",
-    axis.text.y = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
+    axis.text.y = element_text(size = 40),
+    legend.text = element_text(size = 40),
+    legend.title = element_text(size = 40),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     axis.ticks = element_blank(),
     axis.text = element_text(color = "black")
-  )+geom_vline(xintercept = 0)+
-  geom_hline(yintercept = c(3.5,6.5,9.5,12.5), linetype = 2)+
-  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
-  xlim(-.5,.5)
+  )+geom_vline(xintercept = 0, linewidth = 3)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,12.5), linetype = 2, linewidth = 3)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.6)
 ```
 
 ### aspiration chances
@@ -1991,24 +1992,24 @@ df_asp_cha_pub <- subset(df_asp_cha_all, study == 3)
 df_asp_cha_pub$unique_label <- substr(df_asp_cha_pub$unique_label, 1, nchar(df_asp_cha_pub$unique_label) - 3)
 
 pub_plot_2 <- ggplot(df_asp_cha_pub, aes(x = es, y = reorder(unique_label, desc(plot_order)), color = study)) +
-  geom_point() + # Plot the effect sizes as points
-  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2) + # Add error bars for confidence intervals
+  geom_point(size = 5) + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci.lo, xmax = ci.hi), height = 0.2, size = 3) + # Add error bars for confidence intervals
   scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
     labs(x = "", y = "") +
-  theme_classic() +
+  theme_classic(base_size = 70) +
   theme(
     legend.position = "none",
-    axis.text.y = element_text(size = 12),
-    legend.text = element_text(size = 12),
-    legend.title = element_text(size = 12),
+    axis.text.y = element_text(size = 40),
+    legend.text = element_text(size = 40),
+    legend.title = element_text(size = 40),
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank(),
     axis.ticks = element_blank(),
     axis.text = element_text(color = "black")
-  )+geom_vline(xintercept = 0)+
-  geom_hline(yintercept = c(3.5,6.5,9.5,12.5), linetype = 2)+
-  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 4.5, nudge_x = 0.02, colour = "black")+
-  xlim(-.5,.5)
+  )+geom_vline(xintercept = 0, linewidth = 3)+
+  geom_hline(yintercept = c(3.5,6.5,9.5,12.5), linetype = 2, linewidth = 3)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.6)
 ```
 
 ### guiding principles
@@ -2181,16 +2182,15 @@ pub_plot_3 <- ggplot(df_asp_gp_pub, aes(x = es, y = reorder(unique_label, desc(p
   )+geom_vline(xintercept = 0, linewidth = 3)+
   geom_hline(yintercept = c(2.5,4.5,6.5,8.5), linetype = 2, linewidth = 3)+
   geom_text(aes(label = text_label, x = 1.20 * max(ci.hi)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
-  xlim(-.5,.7)
+  xlim(-.5,.6)
 
-library(ggpubr)
 pub_plot_comp<-ggarrange(pub_plot_1, pub_plot_2 , pub_plot_3,
                               font.label = list(size = 70),
                              labels = c("A", "B", "C"),ncol = 2, nrow =2,common.legend = FALSE)
 
 pub_plot_comp
 pub_plot_comp%>%
-  ggsave(filename="pub_plot_comp.jpg",width = 40, height = 30)
+  ggsave(filename="pub_plot_comp.jpg",width = 45, height = 40)
 ```
 
 ## correlations
@@ -2393,6 +2393,33 @@ ggplot(corr_importance, aes(x = r, y = reorder(unique_label, desc(plot_order)), 
 #ggsave("forest_plot_corr_importance.pdf", width = 8, height = 10)
 #ggsave("forest_plot_corr_importance.png", width = 7, height = 10)
 
+###### only tests with financial from the current data ######
+
+corr_importance_pub <- subset(corr_importance, study == 3)
+#modify label
+corr_importance_pub$unique_label <- substr(corr_importance_pub$unique_label, 1, nchar(corr_importance_pub$unique_label) - 3)
+
+corr_importance_pub <- corr_importance_pub[grep("fsi $", corr_importance_pub$unique_label),]
+
+pub_plot_4 <- ggplot(corr_importance_pub, aes(x = r, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point(size = 5) + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2, size = 3) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic(base_size = 70) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 40),
+    legend.text = element_text(size = 40),
+    legend.title = element_text(size = 40),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0, linewidth = 3)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci_high)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.6)
+
 ```
 
 ### chances
@@ -2436,6 +2463,33 @@ ggplot(corr_chance, aes(x = r, y = reorder(unique_label, desc(plot_order)), colo
 
 #ggsave("forest_plot_corr_chance.pdf", width = 8, height = 10)
 #ggsave("forest_plot_corr_chance.png", width = 7, height = 10)
+
+###### only tests with financial from the current data ######
+
+corr_chance_pub <- subset(corr_chance, study == 3)
+#modify label
+corr_chance_pub$unique_label <- substr(corr_chance_pub$unique_label, 1, nchar(corr_chance_pub$unique_label) - 3)
+
+corr_chance_pub <- corr_chance_pub[grep("fsc $", corr_chance_pub$unique_label),]
+
+pub_plot_5 <- ggplot(corr_chance_pub, aes(x = r, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point(size = 5) + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2, size = 3) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic(base_size = 70) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 40),
+    legend.text = element_text(size = 40),
+    legend.title = element_text(size = 40),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0, linewidth = 3)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci_high)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.6)
 ```
 
 ### guiding principles
@@ -2476,6 +2530,40 @@ ggplot(corr_gpr, aes(x = r, y = reorder(unique_label, desc(plot_order)), color =
 
 #ggsave("forest_plot_corr_gpr.pdf", width = 8, height = 10)
 #ggsave("forest_plot_corr_gpr.png", width = 8, height = 4)
+
+###### only tests with financial from the current data ######
+
+corr_gpr_pub <- subset(corr_gpr, study == 3)
+#modify label
+corr_gpr_pub$unique_label <- substr(corr_gpr_pub$unique_label, 1, nchar(corr_gpr_pub$unique_label) - 3)
+
+
+pub_plot_6 <- ggplot(corr_gpr_pub, aes(x = r, y = reorder(unique_label, desc(plot_order)), color = study)) +
+  geom_point(size = 5) + # Plot the effect sizes as points
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.2, size = 3) + # Add error bars for confidence intervals
+  scale_color_viridis_d(begin = 0.2, end = 0.8, name = "Study", guide = guide_legend(override.aes = list(size=4))) +
+    labs(x = "", y = "") +
+  theme_classic(base_size = 70) +
+  theme(
+    legend.position = "none",
+    axis.text.y = element_text(size = 40),
+    legend.text = element_text(size = 40),
+    legend.title = element_text(size = 40),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_text(color = "black")
+  )+geom_vline(xintercept = 0, linewidth = 3)+
+  geom_text(aes(label = text_label, x = 1.20 * max(ci_high)), hjust = 0, size = 12.5, nudge_x = 0.02, colour = "black")+
+  xlim(-.5,.6)
+
+pub_plot_corr<-ggarrange(pub_plot_4, pub_plot_5 , pub_plot_6,
+                              font.label = list(size = 70),
+                             labels = c("A", "B", "C"),ncol = 2, nrow =2,common.legend = FALSE)
+
+pub_plot_corr
+pub_plot_corr%>%
+  ggsave(filename="pub_plot_corr.jpg",width = 45, height = 20)
 ```
 
 ```{r}
@@ -2487,6 +2575,9 @@ df_ttest$ES_id <- seq(1:nrow(df_ttest))
 
 #prepare correlation results for summary effect
 df_corr <- subset(results_corr, study == 3)
+
+df_corr <- df_corr[grep("(fsc|fsi|money)$", df_corr$Label), ]
+
 df_corr$n <- nrow(df)
 df_corr$ES_id <- seq(1:nrow(df_corr))
 ```
